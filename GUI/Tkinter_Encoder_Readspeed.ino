@@ -1,8 +1,8 @@
 #include <TimerOne.h>
 //Encoder
-#define e1PinA 2
+#define e1PinA 3
 
-#define e2PinA 3
+#define e2PinA 2
 
 #define e3PinA 18
 
@@ -15,20 +15,20 @@ long oldposition1 = 0, oldposition2 = 0, oldposition3 = 0, oldposition4 = 0;
 long s1, s2, s3, s4;
 
 //Cytron
-#define m1_dir 23
-#define m2_dir 24
-#define m1_pwm 4
-#define m2_pwm 5
+#define m4_dir 53
+#define m1_dir 51
+#define m4_pwm 4
+#define m1_pwm 5
 
-#define m3_dir 25
-#define m4_dir 26
+#define m2_dir 47
+#define m3_dir 49
+#define m2_pwm 7
 #define m3_pwm 6
-#define m4_pwm 7
 
-int M1_PWM = 150;
-int M2_PWM = 150;
-int M3_PWM = 150;
-int M4_PWM = 150;
+int M1_PWM = 20;
+int M2_PWM = 20;
+int M3_PWM = 20;
+int M4_PWM = 20;
 
 char userInput;
 // int cwSpeed = 150;
@@ -146,45 +146,45 @@ void readspeed() {
 
 void fwd() {
   Serial.println("Bot moving forward");
-  acwMotor();
-  bstopMotor();
-  cccwMotor();
-  dstopMotor();
+  accwMotor();
+  bccwMotor();
+  ccwMotor();
+  dcwMotor();
 }
 void bkw() {
   Serial.println("Bot moving backwards");
-  accwMotor();
-  bstopMotor();
-  ccwMotor();
-  dstopMotor();
+  acwMotor();
+  bcwMotor();
+  cccwMotor();
+  dccwMotor();
 }
 void rt() {
   Serial.println("Bot moving right");
-  astopMotor();
-  bccwMotor();
-  cstopMotor();
-  dcwMotor();
+  accwMotor();
+  bcwMotor();
+  ccwMotor();
+  dccwMotor();
 }
 void lt() {
   Serial.println("Bot moving left");
-  astopMotor();
-  bcwMotor();
-  cstopMotor();
-  dccwMotor();
+  acwMotor();
+  bccwMotor();
+  cccwMotor();
+  dcwMotor();
 }
 void cw() {
   Serial.println("Bot moving clockwise");
-  acwMotor();
-  bcwMotor();
-  ccwMotor();
-  dcwMotor();
-}
-void ccw() {
-  Serial.println("Bot moving counter-clockwise");
   accwMotor();
   bccwMotor();
   cccwMotor();
   dccwMotor();
+}
+void ccw() {
+  Serial.println("Bot moving counter-clockwise");
+  acwMotor();
+  bcwMotor();
+  ccwMotor();
+  dcwMotor();
 }
 void stp() {
   Serial.println("Bot stop");
@@ -198,35 +198,43 @@ void stp() {
 
 void acwMotor() {
   Serial.println("Motor A clockwise");
+  digitalWrite(m1_dir,HIGH);
   analogWrite(m1_pwm, M1_PWM);
 }
 void accwMotor() {
   Serial.println("Motor A counter-clockwise");
-  analogWrite(m1_pwm, 0 - M1_PWM);
+  digitalWrite(m1_dir,LOW);
+  analogWrite(m1_pwm, M1_PWM);
 }
 void bcwMotor() {
   Serial.println("Motor B clockwise");
+  digitalWrite(m2_dir,HIGH);
   analogWrite(m2_pwm, M2_PWM);
 }
 void bccwMotor() {
   Serial.println("Motor B counter-clockwise");
-  analogWrite(m2_pwm, 0 - M2_PWM);
+  digitalWrite(m2_dir,LOW);
+  analogWrite(m2_pwm, M2_PWM);
 }
 void ccwMotor() {
   Serial.println("Motor C clockwise");
+  digitalWrite(m3_dir,HIGH);
   analogWrite(m3_pwm, M3_PWM);
 }
 void cccwMotor() {
   Serial.println("Motor C counter-clockwise");
-  analogWrite(m3_pwm, 0 - M3_PWM);
+  digitalWrite(m3_dir,LOW);
+  analogWrite(m3_pwm, M3_PWM);
 }
 void dcwMotor() {
   Serial.println("Motor D clockwise");
+  digitalWrite(m4_dir,HIGH);
   analogWrite(m4_pwm, M4_PWM);
 }
 void dccwMotor() {
   Serial.println("Motor D counter-clockwise");
-  analogWrite(m4_pwm, 0 - M4_PWM);
+  digitalWrite(m4_dir,LOW);
+  analogWrite(m4_pwm, M4_PWM);
 }
 void astopMotor() {
   Serial.println("Motor A stop");
