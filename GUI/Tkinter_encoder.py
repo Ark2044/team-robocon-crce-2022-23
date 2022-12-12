@@ -5,13 +5,13 @@ import serial
 import threading
 import continuous_threading
 import numpy as np
-from matplotlib import pyplot as plt
-from matplotlib.pyplot import figure as Figure
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib import animation
+# from matplotlib import pyplot as plt
+# from matplotlib.pyplot import figure as Figure
+# from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+# from matplotlib import animation
 
 # Port
-ser = serial.Serial('COM10', 9600)
+ser = serial.Serial('/dev/ttyUSB0', 9600)
 val = 0
 index = []
 ser.close()
@@ -26,6 +26,7 @@ y = []
 
 # Read data from arduino
 
+
 def readserial():
     global val
     ser_bytes = ser.readline()
@@ -39,9 +40,9 @@ def readserial():
     elif (len(index) == 2):
         displayL2 = tk.Label(root, text=index[1]).place(x=70, y=200)
     elif (len(index) == 3):
-        display3 = tk.Label(root, text=index[2]).place(x=550, y=70)
+        display3 = tk.Label(root, text=index[2]).place(x=550, y=200)
     elif (len(index) == 4):
-        display4 = tk.Label(root, text=index[3]).place(x=550, y=200)
+        display4 = tk.Label(root, text=index[3]).place(x=550, y=70)
 
     if len(index) == 4:
 
@@ -60,6 +61,27 @@ t1 = continuous_threading.PeriodicThread(0.5, readserial)
 
 root = tk.Tk()
 root.state('zoomed')
+
+def fwd():
+    ser.write(b'f')
+
+def bkw():
+    ser.write(b'b')
+
+def rt():
+    ser.write(b'r')
+
+def lt():
+    ser.write(b'l')
+
+def cw():
+    ser.write(b'c')
+
+def ccw():
+    ser.write(b'a')
+
+def stp():
+    ser.write(b's')
 
 # Button
 
@@ -135,6 +157,41 @@ button.place(x=500, y=225)
 button = tk.Button(root, text="Down",
                    command=lambda m="R2 Down": which_button(m))
 button.place(x=500, y=250)
+
+# Forward
+button = tk.Button(root, text="Forward",
+                   command=fwd)
+button.place(x=250, y=350)
+
+# BACKWARD
+button = tk.Button(root, text="Backward",
+                   command=bkw)
+button.place(x=250, y=450)
+
+# RIGHT
+button = tk.Button(root, text="Right",
+                   command=rt)
+button.place(x=280, y=400)
+
+# LEFT
+button = tk.Button(root, text="Left",
+                   command=lt)
+button.place(x=220, y=400)
+
+# CLOCK
+button = tk.Button(root, text="Clock",
+                   command=cw)
+button.place(x=250, y=500)
+
+# ANTICLOCK
+button = tk.Button(root, text="Anticlock",
+                   command=ccw)
+button.place(x=300, y=500)
+
+# STOP
+button = tk.Button(root, text="Stop",
+                   command=stp)
+button.place(x=400, y=500)
 
 # # Graph
 # count = 0
