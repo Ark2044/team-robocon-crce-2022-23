@@ -76,8 +76,8 @@ void setup() {
   digitalWrite(m4_dir, LOW);
 
   Serial.begin(9600);
-  Serial.println("Omni-Bot Control Begin");
-  Serial.println("enter: f, b, r, l, c, a, s");  //FORWARD,BACKWARD,RIGHT,LEFT,CLOCK,ANTICLOCK,STOP
+  //Serial.println("Omni-Bot Control Begin");
+  //Serial.println("enter: f, b, r, l, c, a, s");  //FORWARD,BACKWARD,RIGHT,LEFT,CLOCK,ANTICLOCK,STOP
 }
 
 void loop() {
@@ -145,49 +145,49 @@ void readspeed() {
 //HIGH LEVEL MOTOR FUNCTIONS (fwd, bkw, rt, lt, cw, ccw)
 
 void fwd() {
-  Serial.println("Bot moving forward");
+  //Serial.println("Bot moving forward");
   accwMotor();
   bccwMotor();
   ccwMotor();
   dcwMotor();
 }
 void bkw() {
-  Serial.println("Bot moving backwards");
+  //Serial.println("Bot moving backwards");
   acwMotor();
   bcwMotor();
   cccwMotor();
   dccwMotor();
 }
 void rt() {
-  Serial.println("Bot moving right");
+  //Serial.println("Bot moving right");
   accwMotor();
   bcwMotor();
   ccwMotor();
   dccwMotor();
 }
 void lt() {
-  Serial.println("Bot moving left");
+  //Serial.println("Bot moving left");
   acwMotor();
   bccwMotor();
   cccwMotor();
   dcwMotor();
 }
 void cw() {
-  Serial.println("Bot moving clockwise");
+  //Serial.println("Bot moving clockwise");
   accwMotor();
   bccwMotor();
   cccwMotor();
   dccwMotor();
 }
 void ccw() {
-  Serial.println("Bot moving counter-clockwise");
+  //Serial.println("Bot moving counter-clockwise");
   acwMotor();
   bcwMotor();
   ccwMotor();
   dcwMotor();
 }
 void stp() {
-  Serial.println("Bot stop");
+  //Serial.println("Bot stop");
   astopMotor();
   bstopMotor();
   cstopMotor();
@@ -197,58 +197,58 @@ void stp() {
 //LOW LEVEL MOTOR FUNCTIONS
 
 void acwMotor() {
-  Serial.println("Motor A clockwise");
+  //Serial.println("Motor A clockwise");
   digitalWrite(m1_dir,HIGH);
   analogWrite(m1_pwm, M1_PWM);
 }
 void accwMotor() {
-  Serial.println("Motor A counter-clockwise");
+  //Serial.println("Motor A counter-clockwise");
   digitalWrite(m1_dir,LOW);
   analogWrite(m1_pwm, M1_PWM);
 }
 void bcwMotor() {
-  Serial.println("Motor B clockwise");
+  //Serial.println("Motor B clockwise");
   digitalWrite(m2_dir,HIGH);
   analogWrite(m2_pwm, M2_PWM);
 }
 void bccwMotor() {
-  Serial.println("Motor B counter-clockwise");
+  //.println("Motor B counter-clockwise");
   digitalWrite(m2_dir,LOW);
   analogWrite(m2_pwm, M2_PWM);
 }
 void ccwMotor() {
-  Serial.println("Motor C clockwise");
+  //Serial.println("Motor C clockwise");
   digitalWrite(m3_dir,HIGH);
   analogWrite(m3_pwm, M3_PWM);
 }
 void cccwMotor() {
-  Serial.println("Motor C counter-clockwise");
+  //Serial.println("Motor C counter-clockwise");
   digitalWrite(m3_dir,LOW);
   analogWrite(m3_pwm, M3_PWM);
 }
 void dcwMotor() {
-  Serial.println("Motor D clockwise");
+  //Serial.println("Motor D clockwise");
   digitalWrite(m4_dir,HIGH);
   analogWrite(m4_pwm, M4_PWM);
 }
 void dccwMotor() {
-  Serial.println("Motor D counter-clockwise");
+  //Serial.println("Motor D counter-clockwise");
   digitalWrite(m4_dir,LOW);
   analogWrite(m4_pwm, M4_PWM);
 }
 void astopMotor() {
-  Serial.println("Motor A stop");
+  //Serial.println("Motor A stop");
   analogWrite(m1_pwm, 0);
 }
 void bstopMotor() {
-  Serial.println("Motor B stop");
+  //Serial.println("Motor B stop");
   analogWrite(m2_pwm, 0);
 }
 void cstopMotor() {
-  Serial.println("Motor C stop");
+  //Serial.println("Motor C stop");
   analogWrite(m3_pwm, 0);
 }
 void dstopMotor() {
-  Serial.println("Motor D stop");
+  //Serial.println("Motor D stop");
   analogWrite(m4_pwm, 0);
 }
