@@ -8,7 +8,7 @@
 
 #define e4PinA 20
 
-volatile long e1Pos = 0, e2Pos = 0, e3Pos = 0, e4Pos = 0;
+volatile long long int e1Pos = 0, e2Pos = 0, e3Pos = 0, e4Pos = 0;
 long newposition1, newposition2, newposition3, newposition4;
 long oldposition1 = 0, oldposition2 = 0, oldposition3 = 0, oldposition4 = 0;
 
@@ -56,8 +56,8 @@ void setup() {
   Timer1.initialize(1000000 / 2);
   Timer1.attachInterrupt(readspeed);
 
-  attachInterrupt(digitalPinToInterrupt(2), doe1, RISING);
-  attachInterrupt(digitalPinToInterrupt(3), doe2, RISING);
+  attachInterrupt(digitalPinToInterrupt(3), doe1, RISING);
+  attachInterrupt(digitalPinToInterrupt(2), doe2, RISING);
   attachInterrupt(digitalPinToInterrupt(18), doe3, RISING);
   attachInterrupt(digitalPinToInterrupt(20), doe4, RISING);
 
@@ -77,7 +77,7 @@ void setup() {
 
   Serial.begin(9600);
   //Serial.println("Omni-Bot Control Begin");
-  //Serial.println("enter: f, b, r, l, c, a, s");  //FORWARD,BACKWARD,RIGHT,LEFT,CLOCK,ANTICLOCK,STOP
+  //Serial.println("enter: F, R, r, l, W, w, s");  //FORWARD,BACKWARD,RIGHT,LEFT,CLOCK,ANTICLOCK,STOP
 }
 
 void loop() {
@@ -85,13 +85,21 @@ void loop() {
   // cwSpeed = speedIn;
   // ccwSpeed = -speedIn;
 
-  if (userInput == 'f') fwd();
-  else if (userInput == 'b') bkw();
+  if (userInput == 'F') fwd();
+  else if (userInput == 'R') bkw();
   else if (userInput == 'r') rt();
   else if (userInput == 'l') lt();
-  else if (userInput == 'c') cw();
-  else if (userInput == 'a') ccw();
+  else if (userInput == 'W') cw();
+  else if (userInput == 'w') ccw();
   else if (userInput == 's') stp();
+  else if (userInput == 'A') m1u();
+  else if (userInput == 'a') m1d();
+  else if (userInput == 'B') m2u();
+  else if (userInput == 'b') m2d();
+  else if (userInput == 'C') m3u();
+  else if (userInput == 'c') m3d();
+  else if (userInput == 'D') m4u();
+  else if (userInput == 'd') m4d();
 
   newposition1 = e1Pos;
 
@@ -134,7 +142,6 @@ void readspeed() {
   Serial.print("speed3 = ");
   Serial.println(s3);
   oldposition3 = newposition3;
-
 
   s4 = (newposition4 - oldposition4);
   Serial.print("speed4 = ");
@@ -198,42 +205,42 @@ void stp() {
 
 void acwMotor() {
   //Serial.println("Motor A clockwise");
-  digitalWrite(m1_dir,HIGH);
+  digitalWrite(m1_dir, HIGH);
   analogWrite(m1_pwm, M1_PWM);
 }
 void accwMotor() {
   //Serial.println("Motor A counter-clockwise");
-  digitalWrite(m1_dir,LOW);
+  digitalWrite(m1_dir, LOW);
   analogWrite(m1_pwm, M1_PWM);
 }
 void bcwMotor() {
   //Serial.println("Motor B clockwise");
-  digitalWrite(m2_dir,HIGH);
+  digitalWrite(m2_dir, HIGH);
   analogWrite(m2_pwm, M2_PWM);
 }
 void bccwMotor() {
   //.println("Motor B counter-clockwise");
-  digitalWrite(m2_dir,LOW);
+  digitalWrite(m2_dir, LOW);
   analogWrite(m2_pwm, M2_PWM);
 }
 void ccwMotor() {
   //Serial.println("Motor C clockwise");
-  digitalWrite(m3_dir,HIGH);
+  digitalWrite(m3_dir, HIGH);
   analogWrite(m3_pwm, M3_PWM);
 }
 void cccwMotor() {
   //Serial.println("Motor C counter-clockwise");
-  digitalWrite(m3_dir,LOW);
+  digitalWrite(m3_dir, LOW);
   analogWrite(m3_pwm, M3_PWM);
 }
 void dcwMotor() {
   //Serial.println("Motor D clockwise");
-  digitalWrite(m4_dir,HIGH);
+  digitalWrite(m4_dir, HIGH);
   analogWrite(m4_pwm, M4_PWM);
 }
 void dccwMotor() {
   //Serial.println("Motor D counter-clockwise");
-  digitalWrite(m4_dir,LOW);
+  digitalWrite(m4_dir, LOW);
   analogWrite(m4_pwm, M4_PWM);
 }
 void astopMotor() {
@@ -251,4 +258,45 @@ void cstopMotor() {
 void dstopMotor() {
   //Serial.println("Motor D stop");
   analogWrite(m4_pwm, 0);
+}
+
+//PWM functions
+void m1u() {
+  M1_PWM += 10;
+  analogWrite(m1_pwm, M1_PWM);
+}
+
+void m1d() {
+  M1_PWM -= 10;
+  analogWrite(m1_pwm, M1_PWM);
+}
+
+void m2u() {
+  M2_PWM += 10;
+  analogWrite(m2_pwm, M2_PWM);
+}
+
+void m2d() {
+  M2_PWM -= 10;
+  analogWrite(m2_pwm, M2_PWM);
+}
+
+void m3u() {
+  M3_PWM += 10;
+  analogWrite(m3_pwm, M3_PWM);
+}
+
+void m3d() {
+  M3_PWM -= 10;
+  analogWrite(m3_pwm, M3_PWM);
+}
+
+void m4u() {
+  M4_PWM += 10;
+  analogWrite(m4_pwm, M4_PWM);
+}
+
+void m4d() {
+  M4_PWM -= 10;
+  analogWrite(m4_pwm, M4_PWM);
 }
