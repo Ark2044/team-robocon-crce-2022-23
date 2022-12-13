@@ -4,86 +4,126 @@ import time
 import serial
 import threading
 import continuous_threading
-import numpy as np
+# import numpy as np
 # from matplotlib import pyplot as plt
 # from matplotlib.pyplot import figure as Figure
 # from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 # from matplotlib import animation
 
-# Port
-ser = serial.Serial('/dev/ttyUSB0', 9600)
-val = 0
-index = []
-ser.close()
-ser.open()
+# # Port
+# ser = serial.Serial('/dev/ttyUSB0', 9600)
+# val = 0
+# index = []
+# ser.close()
+# ser.open()
 
-# Arduino values in array
-Encoder1 = []
-Encoder2 = []
-Encoder3 = []
-Encoder4 = []
-y = []
+# # Arduino values in array
+# Encoder1 = []
+# Encoder2 = []
+# Encoder3 = []
+# Encoder4 = []
+# y = []
 
 # Read data from arduino
 
 
-def readserial():
-    global val
-    ser_bytes = ser.readline()
-    ser_bytes = ser_bytes.decode("utf-8")
-    print(ser_bytes.rstrip())
-    val = ser_bytes
-    index.append(val)
+# def readserial():
+#     global val
+#     ser_bytes = ser.readline()
+#     ser_bytes = ser_bytes.decode("utf-8")
+#     print(ser_bytes.rstrip())
+#     val = ser_bytes
+#     index.append(val)
 
-    if (len(index) == 1):
-        displayL1 = tk.Label(root, text=index[0]).place(x=70, y=70)
-    elif (len(index) == 2):
-        displayL2 = tk.Label(root, text=index[1]).place(x=70, y=200)
-    elif (len(index) == 3):
-        display3 = tk.Label(root, text=index[2]).place(x=550, y=200)
-    elif (len(index) == 4):
-        display4 = tk.Label(root, text=index[3]).place(x=550, y=70)
+#     if (len(index) == 1):
+#         displayL1 = tk.Label(root, text=index[0]).place(x=70, y=70)
+#     elif (len(index) == 2):
+#         displayL2 = tk.Label(root, text=index[1]).place(x=70, y=200)
+#     elif (len(index) == 3):
+#         display3 = tk.Label(root, text=index[2]).place(x=550, y=200)
+#     elif (len(index) == 4):
+#         display4 = tk.Label(root, text=index[3]).place(x=550, y=70)
 
-    if len(index) == 4:
+#     if len(index) == 4:
 
-        # Encoder1.append(index[0])
-        # Encoder2.append(index[1])
-        # Encoder3.append(index[2])
-        # Encoder4.append(index[3])
-        # anima = animation.FuncAnimation(plt.gcf(), draw_graph, interval=1500)
-        index.clear()
+#         # Encoder1.append(index[0])
+#         # Encoder2.append(index[1])
+#         # Encoder3.append(index[2])
+#         # Encoder4.append(index[3])
+#         # anima = animation.FuncAnimation(plt.gcf(), draw_graph, interval=1500)
+#         index.clear()
 
-    time.sleep(0.5)
+#     time.sleep(0.5)
 
 
-# Thread
-t1 = continuous_threading.PeriodicThread(0.5, readserial)
+# # Thread
+# t1 = continuous_threading.PeriodicThread(0.5, readserial)
 
 root = tk.Tk()
 root.state('zoomed')
 
+
 def fwd():
-    ser.write(b'f')
+    ser.write(b'F')
+
 
 def bkw():
-    ser.write(b'b')
+    ser.write(b'R')
+
 
 def rt():
     ser.write(b'r')
 
+
 def lt():
     ser.write(b'l')
 
+
 def cw():
-    ser.write(b'c')
+    ser.write(b'W')
+
 
 def ccw():
-    ser.write(b'a')
+    ser.write(b'w')
+
 
 def stp():
     ser.write(b's')
 
+
+def m1u():
+    ser.write(b'A')
+
+
+def m1d():
+    ser.write(b'a')
+
+
+def m2u():
+    ser.write(b'B')
+
+
+def m2d():
+    ser.write(b'b')
+
+
+def m3u():
+    ser.write(b'C')
+
+
+def m3d():
+    ser.write(b'c')
+
+
+def m4u():
+    ser.write(b'D')
+
+
+def m4d():
+    ser.write(b'd')
+
 # Button
+
 
 def which_button(button_press):
     print(button_press)
@@ -105,12 +145,12 @@ L1 = tk.Label(root, text="LF", font=('calibri', 20, 'bold'),
 w = tk.Label(root, text="Speed:").place(x=20, y=70)
 
 # Up button
-button = tk.Button(root, text="Up", command=lambda m="L1 Up": which_button(m))
+button = tk.Button(root, text="Up", command=m1u)
 button.place(x=20, y=90)
 
 # Down button
 button = tk.Button(root, text="Down",
-                   command=lambda m="L1 Down": which_button(m))
+                   command=m1d)
 button.place(x=20, y=120)
 
 # Left 2
@@ -120,12 +160,12 @@ L2 = tk.Label(root, text="LR", font=('calibri', 20, 'bold'),
 w = tk.Label(root, text="Speed:").place(x=20, y=200)
 
 # Up button
-button = tk.Button(root, text="Up", command=lambda m="L2 Up": which_button(m))
+button = tk.Button(root, text="Up", command=m2u)
 button.place(x=20, y=225)
 
 # Down button
 button = tk.Button(root, text="Down",
-                   command=lambda m="L2 Down": which_button(m))
+                   command=m2d)
 button.place(x=20, y=250)
 
 # Right 1
@@ -135,12 +175,12 @@ R1 = tk.Label(root, text="RF", font=('calibri', 20, 'bold'),
 w = tk.Label(root, text="Speed:").place(x=500, y=70)
 
 # Up button
-button = tk.Button(root, text="Up", command=lambda m="R1 Up": which_button(m))
+button = tk.Button(root, text="Up", command=m4u)
 button.place(x=500, y=90)
 
 # Down button
 button = tk.Button(root, text="Down",
-                   command=lambda m="R1 Down": which_button(m))
+                   command=m4d)
 button.place(x=500, y=120)
 
 # Right 2
@@ -150,12 +190,12 @@ R2 = tk.Label(root, text="RR", font=('calibri', 20, 'bold'),
 w = tk.Label(root, text="Speed:").place(x=500, y=200)
 
 # Up button
-button = tk.Button(root, text="Up", command=lambda m="R2 Up": which_button(m))
+button = tk.Button(root, text="Up", command=m3u)
 button.place(x=500, y=225)
 
 # Down button
 button = tk.Button(root, text="Down",
-                   command=lambda m="R2 Down": which_button(m))
+                   command=m3d)
 button.place(x=500, y=250)
 
 # Forward
@@ -214,6 +254,6 @@ button.place(x=400, y=500)
 # plt.grid(True)
 
 
-t1.start()
+# t1.start()
 
 root.mainloop()
