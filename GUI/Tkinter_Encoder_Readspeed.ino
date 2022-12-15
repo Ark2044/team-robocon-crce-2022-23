@@ -199,6 +199,10 @@ void stp() {
   bstopMotor();
   cstopMotor();
   dstopMotor();
+  M1_PWM = 20;
+  M2_PWM = 20;
+  M3_PWM = 20;
+  M4_PWM = 20;
 }
 
 //LOW LEVEL MOTOR FUNCTIONS
