@@ -131,7 +131,7 @@ def which_button(button_press):
 
 # Stop
 button = tk.Button(root, text="Stop", borderwidth=10, bg="red",
-                   command=lambda m="STOP": which_button(m))
+                   command=stp)
 button.place(x=250, y=10)
 
 # Battery
@@ -201,37 +201,33 @@ button.place(x=500, y=250)
 # Forward
 button = tk.Button(root, text="Forward",
                    command=fwd)
-button.place(x=250, y=350)
+button.place(x=250, y=100)
 
 # BACKWARD
 button = tk.Button(root, text="Backward",
                    command=bkw)
-button.place(x=250, y=450)
+button.place(x=250, y=200)
 
 # RIGHT
 button = tk.Button(root, text="Right",
                    command=rt)
-button.place(x=280, y=400)
+button.place(x=320, y=150)
 
 # LEFT
 button = tk.Button(root, text="Left",
                    command=lt)
-button.place(x=220, y=400)
+button.place(x=200, y=150)
 
 # CLOCK
 button = tk.Button(root, text="Clock",
                    command=cw)
-button.place(x=250, y=500)
+button.place(x=200, y=250)
 
 # ANTICLOCK
 button = tk.Button(root, text="Anticlock",
                    command=ccw)
-button.place(x=300, y=500)
+button.place(x=320, y=250)
 
-# STOP
-button = tk.Button(root, text="Stop",
-                   command=stp)
-button.place(x=400, y=500)
 
 # # Graph
 # count = 0
