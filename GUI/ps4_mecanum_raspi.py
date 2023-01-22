@@ -10,7 +10,7 @@ import csv
 
 filename = "encoder_readings.csv"
 file = open(filename, "a")
-fields = ['Time','Motor1', 'Motor2', 'Motor3', 'Motor4']
+fields = ['Time', 'Motor1', 'Motor2', 'Motor3', 'Motor4']
 with open(filename, 'a', newline='') as f:
     writer = csv.writer(f)
     writer.writerow(fields)
@@ -24,13 +24,13 @@ dt3 = 15
 dt2 = 29
 dt1 = 31
 
-count1 =0
-count2 =0
-count3 =0
-count4 =0
-current_time=0
-interval=1
-    
+count1 = 0
+count2 = 0
+count3 = 0
+count4 = 0
+current_time = 0
+interval = 1
+
 # Cytron 1
 m1_dir = 22
 m1_pwm = 33
@@ -63,31 +63,38 @@ p2 = GPIO.PWM(m2_pwm, freq2)
 p3 = GPIO.PWM(m3_pwm, freq3)
 p4 = GPIO.PWM(m4_pwm, freq4)
 
+
 def signal_handler(sig, frame):
     GPIO.cleanup()
     sys.exit(0)
 
+
 def count_callback1(channel):
     global count1
-    count1+=1
-    
+    count1 += 1
+
+
 def count_callback2(channel):
     global count2
-    count2+=1
-    
+    count2 += 1
+
+
 def count_callback3(channel):
     global count3
-    count3+=1
+    count3 += 1
+
 
 def count_callback4(channel):
     global count4
-    count4+=1
+    count4 += 1
+
 
 def stp():
-  p1.start(0)
-  p2.start(0)
-  p3.start(0)
-  p4.start(0)  
+    p1.start(0)
+    p2.start(0)
+    p3.start(0)
+    p4.start(0)
+
 
 def inc_dec(index, dir):
     global inc0, inc1, inc2, inc3, dec0, dec1, dec2, dec3, duty1, duty2, duty3, duty4
@@ -143,7 +150,7 @@ def inc_dec(index, dir):
 def calibrate():
     if (count1 != 0 or count2 != 0 or count3 != 0 or count4 != 0):
         global sort_list, calib_bool, file
-        global inc0, inc1, inc2, inc3,duty1,duty2,duty3,duty4
+        global inc0, inc1, inc2, inc3, duty1, duty2, duty3, duty4
         sort_list.append(count1)
         sort_list.append(count2)
         sort_list.append(count3)
@@ -185,18 +192,18 @@ def calibrate():
             sort_list = []
         else:
             print("hello")
-            
+
             #calib_bool = True
-            #print('calibrated')
+            # print('calibrated')
             #data = [[str(duty1),str(duty2),str(duty3),str(duty4)]]
             # create the CSV
-            ##with open(filename, 'a', newline='') as f:
-              #  writer = csv.writer(f)
-               # writer.writerows(data)
-            #file.close()
-            #stp()
-            #break
-            
+            # with open(filename, 'a', newline='') as f:
+            #  writer = csv.writer(f)
+            # writer.writerows(data)
+            # file.close()
+            # stp()
+            # break
+
         # print(sort_list)
         # print(sort_index)
 
@@ -209,7 +216,8 @@ def calspeed():
         print('Speed2 =', count2)
         print('Speed3 =', count3)
         print('Speed4 =', count4)
-        data = [[str(current_time),str(count1),str(count2),str(count3),str(count4)]]
+        data = [[str(current_time), str(count1), str(
+            count2), str(count3), str(count4)]]
         # create the CSV
         with open(filename, 'a', newline='') as f:
             writer = csv.writer(f)
@@ -220,17 +228,19 @@ def calspeed():
         count3 = 0
         count4 = 0
 
-#Thread
-t1 = continuous_threading.PeriodicThread(0.1, calspeed)
 
-#HIGH LEVEL MOTOR FUNCTIONS (fwd, bkw, rt, lt, cw, ccw)
+# Thread
+t1 = continuous_threading.PeriodicThread(0.1, calspeed)
+t2 = Thread(target=calibrate)
+# HIGH LEVEL MOTOR FUNCTIONS (fwd, bkw, rt, lt, cw, ccw)
+
 
 def fwd():
     m1cwMotor()
     m2cwMotor()
     m3cwMotor()
     m4cwMotor()
-    calibrate()
+    # calibrate()
 
 
 def bkw():
@@ -238,7 +248,7 @@ def bkw():
     m2ccwMotor()
     m3ccwMotor()
     m4ccwMotor()
-    calibrate()
+    # calibrate()
 
 
 def rt():
@@ -246,14 +256,15 @@ def rt():
     m2ccwMotor()
     m3cwMotor()
     m4cwMotor()
-    calibrate()
-  
+    # calibrate()
+
+
 def lt():
     m1cwMotor()
     m2cwMotor()
     m3ccwMotor()
     m4ccwMotor()
-    calibrate()
+    # calibrate()
 
 
 def cw():
@@ -261,7 +272,7 @@ def cw():
     m2cwMotor()
     m3ccwMotor()
     m4ccwMotor()
-    calibrate()
+    # calibrate()
 
 
 def ccw():
@@ -269,10 +280,10 @@ def ccw():
     m2ccwMotor()
     m3cwMotor()
     m4cwMotor()
-    calibrate()
+    # calibrate()
 
-    
-#LOW LEVEL MOTOR FUNCTIONS
+
+# LOW LEVEL MOTOR FUNCTIONS
 
 def m1cwMotor():
     GPIO.output(m1_dir, GPIO.HIGH)
@@ -297,7 +308,8 @@ def m2ccwMotor():
 def m3cwMotor():
     GPIO.output(m3_dir, GPIO.HIGH)
     p3.start(duty3)
-  
+
+
 def m3ccwMotor():
     GPIO.output(m3_dir, GPIO.LOW)
     p3.start(duty3)
@@ -311,16 +323,21 @@ def m4cwMotor():
 def m4ccwMotor():
     GPIO.output(m4_dir, GPIO.LOW)
     p4.start(duty4)
-  
+
+
 GPIO.setup(dt1, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(dt2, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(dt3, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(dt4, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-GPIO.add_event_detect(dt1, GPIO.RISING, callback=count_callback1,bouncetime=5)
-GPIO.add_event_detect(dt2, GPIO.RISING, callback=count_callback2,bouncetime=5)
-GPIO.add_event_detect(dt3, GPIO.RISING, callback=count_callback3,bouncetime=5)
-GPIO.add_event_detect(dt4, GPIO.RISING, callback=count_callback4,bouncetime=5)
+GPIO.add_event_detect(dt1, GPIO.RISING, callback=count_callback1, bouncetime=5)
+GPIO.add_event_detect(dt2, GPIO.RISING, callback=count_callback2, bouncetime=5)
+GPIO.add_event_detect(dt3, GPIO.RISING, callback=count_callback3, bouncetime=5)
+GPIO.add_event_detect(dt4, GPIO.RISING, callback=count_callback4, bouncetime=5)
 run_bool = False
+
+t1.start()
+t2.start()
+
 
 class MyController(Controller):
 
@@ -328,39 +345,40 @@ class MyController(Controller):
         Controller.__init__(self, **kwargs)
 
     def on_up_arrow_press(self):
-       fwd()            #Forward
+        fwd()  # Forward
 
     def on_down_arrow_press(self):
-       bkw()            #Backward
+        bkw()  # Backward
 
     def on_up_down_arrow_release(self):
-       stp()            #Stop
+        stp()  # Stop
 
     def on_left_arrow_press(self):
-       lt()             #Left
+        lt()  # Left
 
     def on_right_arrow_press(self):
-       rt()             #Right
+        rt()  # Right
 
     def on_left_right_arrow_release(self):
-       stp()
+        stp()
 
     def on_triangle_press(self):
-       cw()             #Clock
+        cw()  # Clock
 
     def on_square_press(self):
-       ccw()            #Anti-clock
+        ccw()  # Anti-clock
 
     def on_triangle_release(self):
-       stp()
+        stp()
 
     def on_square_release(self):
-       stp()
+        stp()
 
     def on_x_press(self):
-       stp()
+        stp()
 
 
-controller = MyController(interface="/dev/input/js0", connecting_using_ds4drv=False)
+controller = MyController(interface="/dev/input/js0",
+                          connecting_using_ds4drv=False)
 # you can start listening before controller is paired, as long as you pair it within the timeout window
 controller.listen(timeout=60)
