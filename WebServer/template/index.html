@@ -1,0 +1,16 @@
+<html>
+<title>Clock</title>
+<body>
+<h1>Clock</h1>
+<p id = "ultrasonic"><p>
+<script>
+    var clock = document.getElementById("clock");
+
+    setInterval(() => {
+        fetch("{{ url_for('time_feed') }}").then(response => {
+                response.text().then(t => {clock.innerHTML = t})
+            });
+        }, 10);  
+</script>
+</body>
+</html>
