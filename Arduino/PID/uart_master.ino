@@ -1,3 +1,4 @@
+//UART MASTER
 #include <PS4BT.h>
 #include <usbhub.h>
 // #include <PS4USB.h>
@@ -40,9 +41,27 @@ void loop() {
 
   if (PS4.connected()) {
     //Serial.println("In");
-    if (PS4.getButtonClick(CIRCLE)) {
+    if (PS4.getButtonClick(UP)) {
       //Serial.println("CIRCLE");
       Serial2.write("f");
+      delay(100);
+    }
+
+    if (PS4.getButtonClick(DOWN)) {
+      //Serial.println("CIRCLE");
+      Serial2.write("b");
+      delay(100);
+    }
+
+    if (PS4.getButtonClick(LEFT)) {
+      //Serial.println("CIRCLE");
+      Serial2.write("l");
+      delay(100);
+    }
+
+    if (PS4.getButtonClick(RIGHT)) {
+      //Serial.println("CIRCLE");
+      Serial2.write("r");
       delay(100);
     }
 
@@ -51,5 +70,17 @@ void loop() {
       Serial2.write("s");
       delay(100);
     }
+
+    if (PS4.getButtonClick(L1)) {
+      //Serial.println("CROSS");
+      Serial2.write("a");
+      delay(100);
+    }
+
+    if (PS4.getButtonClick(R1)) {
+      //Serial.println("CROSS");
+      Serial2.write("c");
+      delay(100);
+    }    
   }
 }

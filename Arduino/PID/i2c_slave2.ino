@@ -6,7 +6,7 @@ class SimplePID {
 private:
   float kp, kd, ki, umax;  // Parameters
   float eprev, eintegral;  // Storage
-
+  float e;
 public:
   // Constructor
   SimplePID()
@@ -23,7 +23,16 @@ public:
   // A function to compute the control signal
   void evalu(int value, int target, float deltaT, int &pwr, int &dir) {
     // error
-    float e = target - (value * 4.333333333333);
+    if (target == 0) {
+      e = 0;
+      //value = 0;
+    } else {
+      e = target - (value);
+    }
+    Serial.print("value = ");
+    Serial.print(value);
+    Serial.print(" e = ");
+    Serial.print(e);
 
     // derivative
     float dedt = (e - eprev) / (deltaT);
@@ -32,19 +41,21 @@ public:
     eintegral = eintegral + e * deltaT;
 
     // control signal
-    float u = (value * 4.333333333) + (kp * e + kd * dedt + ki * eintegral);
+    float u = (kp * e + 0.1 * dedt + ki * eintegral);
+
+    Serial.print(" u = ");
+    Serial.print(u);
 
     // motor power
     pwr = (int)fabs(u);
+    pwr = abs(pwr);
+
     if (pwr > umax) {
       pwr = umax;
     }
-
+    Serial.print(" pwr = ");
+    Serial.println(pwr);
     // motor direction
-    dir = 1;
-    if (u < 0) {
-      dir = -1;
-    }
 
     // store previous error
     eprev = e;
@@ -53,13 +64,13 @@ public:
 
 
 // Pin definition *********** /
-  //int DO_Blink = 13;
 // List of the variables that will be recieved via I2C ****** / byte I2C_OnOff;  //defining the variable that will be sent
 
 int PIN_INPUT1 = 3;
 int PIN_INPUT2 = 2;
 volatile byte state1 = LOW;
 volatile byte state2 = LOW;
+bool stopp = false;
 
 //IR
 volatile long long int ctr1 = 0, ctr2 = 0;
@@ -88,16 +99,16 @@ int pwr1, pwr2, dir1, dir2;
 
 SimplePID pid1, pid2;
 
-// Setup loop *********** / 
+// Setup loop *********** /
 void setup() {
   // pinMode(DO_Blink, OUTPUT);                    // Sets the DO_Blink as output
-  Wire.begin(10);           // Join I2C bus as the slave with address 1
-  Wire.onReceive(BlinkLAD);  // When the data transmition is detected call receiveEvent function
+  Wire.begin(10);                // Join I2C bus as the slave with address 1
+  Wire.onReceive(receiveEvent);  // When the data transmition is detected call receiveEvent function
   Wire.onRequest(requestEvent);
   Serial.begin(9600);
 
-  pid1.setParams(1, 0, 0, 255);
-  pid2.setParams(1, 0, 0, 255);
+  pid1.setParams(1, 0, 0.000001, 255);
+  pid2.setParams(1, 0, 0.000001, 255);
 
 
   attachInterrupt(digitalPinToInterrupt(PIN_INPUT1), interrupt_routine1, RISING);
@@ -110,7 +121,7 @@ void setup() {
   pinMode(m2_pwm, OUTPUT);
 }
 
-// Main loop *********** / 
+// Main loop *********** /
 void loop() {
   delay(100);
   // time difference
@@ -127,15 +138,55 @@ void loop() {
 }
 
 
-// Function / Event call ********* / 
-void BlinkLAD() {
-  target1 = (int)Wire.read();  // Reads the data sent via I2C
+// Function / Event call ********* /
+void receiveEvent() {
+  char argument = Wire.read();  // Reads the data sent via I2C
   Serial.print(target1);
-  target2 = target1;
-  pid1.evalu(s1, target1, deltaT, pwr1, dir1);
-  pid2.evalu(s2, target2, deltaT, pwr2, dir2);
-  setMotor1(dir1, pwr1, m1_pwm, m1_dir);
-  setMotor2(dir2, pwr2, m2_pwm, m2_dir);
+  if (argument == 'f') {  //  Forward
+    stopp = false;
+    target1 = 35;
+    target2 = 35;
+    dir1 = 1;
+    dir2 = 0;
+  } else if (argument == 'b') {  //  Backward
+    stopp = false;
+    target1 = 35;
+    target2 = 35;
+    dir1 = 0;
+    dir2 = 1;
+  } else if (argument == 'l') {  //  Left
+    stopp = false;
+    target1 = 35;
+    target2 = 35;
+    dir1 = 1;
+    dir2 = 1;
+  } else if (argument == 'r') {  //  Right
+    stopp = false;
+    target1 = 35;
+    target2 = 35;
+    dir1 = 1;
+    dir2 = 1;
+  } else if (argument == 's') {  //  Stop
+    stopp = true;
+    target1 = 0;
+    target2 = 0;
+  } else if (argument == 'c') {  //  Clock
+    stopp = false;
+    target1 = 35;
+    target2 = 35;
+    dir1 = 1;
+    dir2 = 1;
+  } else if (argument == 'a') {  //  Anti-Clock
+    stopp = false;
+    target1 = 35;
+    target2 = 35;
+    dir1 = 0;
+    dir2 = 0;
+  }
+  // pid1.evalu(s1, target1, deltaT, pwr1, dir1);
+  // pid2.evalu(s2, target2, deltaT, pwr2, dir2);
+  // setMotor1(dir1, pwr1, m1_pwm, m1_dir);
+  // setMotor2(dir2, pwr2, m2_pwm, m2_dir);
 }
 
 void requestEvent() {
@@ -172,41 +223,43 @@ void readspeed() {
   Serial.print(" Target = ");
   Serial.println(target2);
   oldcount2 = newcount2;
+
+  if (stopp == false) {
+    pid1.evalu(s1, target1, deltaT, pwr1, dir1);
+    pid2.evalu(s2, target2, deltaT, pwr2, dir2);
+    setMotor1(dir1, pwr1, m1_pwm, m1_dir);
+    setMotor2(dir2, pwr2, m2_pwm, m2_dir);
+  } else if (stopp == true) {
+    setMotor1(dir1, 0, m1_pwm, m1_dir);
+    setMotor2(dir2, 0, m2_pwm, m2_dir);
+  }  
 }
 
 
 void setMotor1(int dir, int pwmVal, int pwm, int dir1) {
-  analogWrite(pwm, pwmVal);
   //digitalWrite(dir1,HIGH);
   if (dir == 1) {
     // Serial.println("dir1 high");
     // Serial.println(dir1);
     digitalWrite(dir1, HIGH);
-    m1_dirflag = 1;
   } else if (dir == 0) {
     // Serial.println("dir1 low");
     // Serial.println(dir1);
     digitalWrite(dir1, LOW);
-    m1_dirflag = 0;
-  } else {
-    analogWrite(pwm, 0);
   }
+  analogWrite(pwm, pwmVal);
 }
 
 void setMotor2(int dir, int pwmVal, int pwm, int dir2) {
-  analogWrite(pwm, pwmVal);
   // digitalWrite(dir2,HIGH);
   if (dir == 1) {
     // Serial.println("dir2 high");
     // Serial.println(dir1);
     digitalWrite(dir1, HIGH);
-    m2_dirflag = 1;
   } else if (dir == 0) {
     // Serial.println("dir2 low");
     // Serial.println(dir1);
     digitalWrite(dir1, LOW);
-    m2_dirflag = 0;
-  } else {
-    analogWrite(pwm, 0);
   }
+  analogWrite(pwm, pwmVal);
 }
