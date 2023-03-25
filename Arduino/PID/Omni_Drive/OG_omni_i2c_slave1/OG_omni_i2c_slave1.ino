@@ -1,13 +1,13 @@
-//OG I2C Slave2 (address 9) reciever code for HC-SR04 Stops the Gearmotor Through I2C/
-//List of the lubraries included in the project******/
+//I2C Slave1 (address 9) reciever code for HC-SR04 Stops the Gearmotor Through I2C
+
 #include <Wire.h>  // Arduino library that enables I2C functionality
 char SerialData1[3];
 class SimplePID {
-
-public:
+private:
   float kp, kd, ki, umax;  // Parameters
   float eprev, eintegral;  // Storage
-  float e;
+  float e,u;
+public:
   // Constructor
   SimplePID()
     : kp(1), kd(0), ki(0), umax(255), eprev(0.0), eintegral(0.0) {}
@@ -21,45 +21,47 @@ public:
   }
 
   // A function to compute the control signal
-  void evalu(int value, int target, float deltaT, int &pwr, int &dir) {
+  void evalu(int value, int target, float deltaT, int &pwr,int pwm_pin) {
     // error
-    if (target == 0) {
-      e = 0;
-      //value = 0;
-    } else {
-      e = target - (value);
-    }
-    Serial.print("value = ");
-    Serial.print(value);
-    Serial.print(" e = ");
-    Serial.print(e);
+    e = target-value;
+    //Serial.print("value = ");
+    //Serial.print(value);
+    //Serial.print(" e = ");
+    //Serial.print(e);
 
     // derivative
     float dedt = (e - eprev) / (deltaT);
-
+    //Serial.println("e dt");
+    //Serial.println(dedt);
     // integral
+    eintegral = eintegral + e * deltaT;
+    //Serial.println("e int");
+    //Serial.println(eintegral);
+    //Serial.println("k1");
+    //Serial.println(ki);
+    // control signal
     if(target==0)
     {
-      eintegral=0;
+      u=(0.1*e+kd*dedt);    
     }
-    eintegral = eintegral + e * deltaT;
+    else{
+     u = (kp * e + kd * dedt + ki * eintegral);
+    }
 
-    // control signal
-    float u = (kp * e + 0.1 * dedt + ki * eintegral);
-
-    Serial.print(" u = ");
-    Serial.print(u);
+     //Serial.print(" u = ");
+     //Serial.print(u);
 
     // motor power
     pwr = (int)fabs(u);
-    pwr = abs(pwr);
+    //pwr = abs(pwr);
 
     if (pwr > umax) {
       pwr = umax;
     }
-    Serial.print(" pwr = ");
-    Serial.println(pwr);
-    // motor direction
+
+    // Serial.print(" pwr = ");
+    // Serial.println(pwr);
+    analogWrite(pwm_pin,pwr);
 
     // store previous error
     eprev = e;
@@ -69,12 +71,13 @@ public:
 
 // Pin definition *********** /
 // List of the variables that will be recieved via I2C ****** / byte I2C_OnOff;  //defining the variable that will be sent
-
+char argument;
 int PIN_INPUT1 = 3;
 int PIN_INPUT2 = 2;
 volatile byte state1 = LOW;
 volatile byte state2 = LOW;
 bool stopp = false;
+bool start_flag = true;
 
 //IR
 volatile long long int ctr1 = 0, ctr2 = 0;
@@ -92,27 +95,25 @@ const int m1_pwm = 5;
 const int m2_dir = 6;
 const int m2_pwm = 9;
 
-int M1_PWM, M2_PWM;
 int target1, target2;
 
 long prevT = 0;
-int m1_dirflag, m2_dirflag;
 
 //motors
-int pwr1, pwr2, dir1, dir2;
+int pwr1, pwr2;
 
 SimplePID pid1, pid2;
 
+const int outPin = 4;
+
 // Setup loop *********** /
 void setup() {
-  // pinMode(DO_Blink, OUTPUT);                    // Sets the DO_Blink as output
+  pinMode(outPin, OUTPUT);
+
   Wire.begin(9);                 // Join I2C bus as the slave with address 1
   Wire.onReceive(receiveEvent);  // When the data transmition is detected call receiveEvent function
   Wire.onRequest(requestEvent);
   Serial.begin(9600);
-
-  pid1.setParams(2, 0, 0.0000005, 255);
-  pid2.setParams(2, 0, 0.0000005, 255);
 
   pinMode(PIN_INPUT1, INPUT_PULLUP);
   pinMode(PIN_INPUT2, INPUT_PULLUP);
@@ -126,29 +127,89 @@ void setup() {
   pinMode(m1_pwm, OUTPUT);
   pinMode(m2_dir, OUTPUT);
   pinMode(m2_pwm, OUTPUT);
+
+  pid1.setParams(1.8, 0, 0.0000005, 255);           //Change kP,kD,kI,umax only here
+  pid2.setParams(1.8, 0, 0.0000005, 255);           //Change kP,kD,kI,umax only here
+
+  //Serial.println("Hello");
 }
 
 // Main loop *********** /
 void loop() {
   delay(100);
-  // time difference
+  //digitalWrite(outPin, HIGH);
+  //Serial.println("Output high");
+  //if (start_flag == true) {
+  //start_flag = false;
+  //delay(50);
+  //}
 
+  // String rxString = "";
+  // String strArr[6];
+  // if (Serial.available()) {
+  //   //Keep looping until there is something in the buffer. 
+  //   while (Serial.available()) {
+  //     //Delay to allow byte to arrive in input buffer.
+  //     delay(2);
+  //     //Read a single character from the buffer.
+  //     char ch = Serial.read();
+  //     //Append that single character to a string.
+  //     rxString += ch;
+  //   }
+  //   int stringStart = 0;
+  //   int arrayIndex = 0;
+  //   for (int i = 0; i < rxString.length(); i++) {
+  //     //Get character and check if it's our "special" character.
+  //     if (rxString.charAt(i) == ',') {
+  //       //Clear previous values from array.
+  //       strArr[arrayIndex] = "";
+  //       //Save substring into array.
+  //       strArr[arrayIndex] = rxString.substring(stringStart, i);
+  //       //Set new string starting point.
+  //       stringStart = (i + 1);
+  //       arrayIndex++;
+  //     }
+  //   }
+  //   //Put values from the array into the variables.
+  //   String kP1 = strArr[0];
+  //   String kD1 = strArr[1];
+  //   String kI1 = strArr[2];
+  //   String kP2 = strArr[3];
+  //   String kD2 = strArr[4];
+  //   String kI2 = strArr[5];
+
+  //   //Convert string to int.
+  //   int kP1_value = kP1.toInt();
+  //   int kD1_value = kD1.toInt();
+  //   int kI1_value = kI1.toInt();
+  //   int kP2_value = kP2.toInt();
+  //   int kD2_value = kD2.toInt();
+  //   int kI2_value = kI2.toInt();
+    
+  //   pid1.setParams(kP1_value, kD1_value, kI1_value, 255);
+  //   pid2.setParams(kP2_value, kD2_value, kI2_value, 255);
+  // }
+  //Serial.println("kp");
+  //Serial.println(kP1_value);
+  //Serial.println("kd");
+  //Serial.println(kD1_value);
+  // time difference
   currT = micros();
   deltaT = ((float)(currT - prevT));
   if (currT - prevT > 1000000) {
+    noInterrupts();
     readspeed();
     prevT = currT;
+    interrupts();
   }
 
-  if (stopp == false) {
-    pid1.evalu(s1, target1, deltaT, pwr1, dir1);
-    pid2.evalu(s2, target2, deltaT, pwr2, dir2);
-    setMotor1(dir1, pwr1, m1_pwm, m1_dir);
-    setMotor2(dir2, pwr2, m2_pwm, m2_dir);
-  } else if (stopp == true) {
-    setMotor1(dir1, pwr1, m1_pwm, m1_dir);
-    setMotor2(dir2, pwr2, m2_pwm, m2_dir);
-  }
+  //Serial.println("s1");
+  //Serial.println(s1);
+  ///Serial.println("target1");
+  //Serial.println(target1);
+  pid1.evalu(s1, target1, deltaT, pwr1,m1_pwm);
+  pid2.evalu(s2, target2, deltaT, pwr2,m2_pwm);
+
 
   newcount1 = ctr1;
 
@@ -158,61 +219,50 @@ void loop() {
 
 // Function / Event call ********* /
 void receiveEvent() {
-  char argument = Wire.read();  // Reads the data sent via I2C
- // Serial.print("Argument: ");
-  //Serial.println(argument);
+  argument = Wire.read();  // Reads the data sent via I2C
+  Serial.print("Argument: ");
+  Serial.println(argument);
   if (argument == 'f') {  // Forward
     stopp = false;
     target1 = 25;
     target2 = 25;
-    dir1 = 1;
-    dir2 = 0;
+    fwd();
   } else if (argument == 'b') {  // Backward
     stopp = false;
     target1 = 25;
     target2 = 25;
-    dir1 = 0;
-    dir2 = 1;
+    bkw();
   } else if (argument == 'l') {  // Left
     stopp = false;
     target1 = 25;
     target2 = 25;
-    dir1 = 0;
-    dir2 = 0;
+    lt();
   } else if (argument == 'r') {  // Right
     stopp = false;
     target1 = 25;
     target2 = 25;
-    dir1 = 1;
-    dir2 = 1;
+    rt();
   } else if (argument == 's') {  //  Stop
     stopp = true;
     target1 = 0;
     target2 = 0;
   } else if (argument == 'c') {  //  Clock
     stopp = false;
-    target1 = 25;
-    target2 = 25;
-    dir1 = 0;
-    dir2 = 0;
+    target1 = 15;
+    target2 = 15;
+    cw();
   } else if (argument == 'a') {  //  Anti-Clock
     stopp = false;
-    target1 = 25;
-    target2 = 25;
-    dir1 = 1;
-    dir2 = 1;
+    target1 = 15;
+    target2 = 15;
+    ccw();
   }
-
-  // pid1.evalu(s1, target1, deltaT, pwr1, dir1);
-  // pid2.evalu(s2, target2, deltaT, pwr2, dir2);
-  // setMotor1(dir1, pwr1, m1_pwm, m1_dir);
-  // setMotor2(dir2, pwr2, m2_pwm, m2_dir);
 }
 
 void requestEvent() {
-
-  String temp_str = String(s1);
-  temp_str.toCharArray(SerialData1, 5);
+  String str1 = String(s1)+","+String(s2);
+  // Serial.println(str1);
+  str1.toCharArray(SerialData1, 5);
   Wire.write(SerialData1);
 }
 
@@ -229,6 +279,7 @@ void readspeed() {
   s1 = (newcount1 - oldcount1);
   Serial.print("IR1 = ");
   Serial.print(s1);
+  // Serial.print(",");
   Serial.print(" PWM1 = ");
   Serial.print(pwr1);
   Serial.print(" Target = ");
@@ -243,32 +294,76 @@ void readspeed() {
   Serial.print(" Target = ");
   Serial.println(target2);
   oldcount2 = newcount2;
-
 }
 
+//HIGH LEVEL MOTOR FUNCTIONS (fwd, bkw, rt, lt, cw, ccw)
 
-void setMotor1(int dir, int pwmVal, int pwm, int dir1) {
-  if (dir == 1) {
-    // Serial.println("dir1 high");
-    // Serial.println(dir1);
-    digitalWrite(dir1, HIGH);
-  } else if (dir == 0) {
-    // Serial.println("dir1 low");
-    // Serial.println(dir1);
-    digitalWrite(dir1, LOW);
-  }
-  analogWrite(pwm, pwmVal);
+void fwd() {
+  // Serial.println("Bot moving forward");
+  m1_cwMotor();
+  m2_ccwMotor();
+}
+void bkw() {
+  // Serial.println("Bot moving backwards");
+  m1_ccwMotor();
+  m2_cwMotor();
+}
+void rt() {
+  // Serial.println("Bot moving right");
+  m1_ccwMotor();
+  m2_ccwMotor();
+}
+void lt() {
+  // Serial.println("Bot moving left");
+  m1_cwMotor();
+  m2_cwMotor();
+}
+void cw() {
+  // Serial.println("Bot moving clockwise");
+  m1_ccwMotor();
+  m2_ccwMotor();
+}
+void ccw() {
+  // Serial.println("Bot moving counter-clockwise");
+  m1_cwMotor();
+  m2_cwMotor();
+}
+void stp() {
+  // Serial.println("Bot stop");
+  m1_stopMotor();
+  m2_stopMotor();
 }
 
-void setMotor2(int dir, int pwmVal, int pwm, int dir2) {
-  if (dir == 1) {
-    // Serial.println("dir2 high");
-    // Serial.println(dir1);
-    digitalWrite(dir2, HIGH);
-  } else if (dir == 0) {
-    // Serial.println("dir2 low");
-    // Serial.println(dir1);
-    digitalWrite(dir2, LOW);
-  }
-  analogWrite(pwm, pwmVal);
+//LOW LEVEL MOTOR FUNCTIONS
+
+void m1_cwMotor() {
+  // Serial.println("Motor A clockwise");
+  digitalWrite(m1_dir, HIGH);
+  //analogWrite(m1_pwm, pwr1);
+}
+void m1_ccwMotor() {
+  // Serial.println("Motor A counter-clockwise");
+  digitalWrite(m1_dir, LOW);
+  //analogWrite(m1_pwm, pwr1);
+}
+void m2_cwMotor() {
+  // Serial.println("Motor B clockwise");
+  digitalWrite(m2_dir, HIGH);
+  //analogWrite(m2_pwm, pwr2);
+}
+void m2_ccwMotor() {
+  // Serial.println("Motor B counter-clockwise");
+  digitalWrite(m2_dir, LOW);
+  //analogWrite(m2_pwm, pwr2);
+}
+
+void m1_stopMotor() {
+  // Serial.println("Motor A stop");
+  //analogWrite(m1_pwm, 0);
+  // analogWrite(m1_pwm, pwr1);
+}
+void m2_stopMotor() {
+  // Serial.println("Motor B stop");
+  //analogWrite(m2_pwm, 0);
+  // analogWrite(m1_pwm, pwr2);
 }
