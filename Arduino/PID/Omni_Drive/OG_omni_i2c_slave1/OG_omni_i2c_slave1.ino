@@ -1,4 +1,4 @@
-//I2C Slave1 (address 9) reciever code for HC-SR04 Stops the Gearmotor Through I2C
+//I2C Slave1 (address 9) reciever code
 
 #include <Wire.h>  // Arduino library that enables I2C functionality
 char SerialData1[3];
@@ -70,7 +70,7 @@ public:
 
 
 // Pin definition *********** /
-// List of the variables that will be recieved via I2C ****** / byte I2C_OnOff;  //defining the variable that will be sent
+// List of the variables that will be recieved via I2C ****** / 
 char argument;
 int PIN_INPUT1 = 3;
 int PIN_INPUT2 = 2;
@@ -104,15 +104,13 @@ int pwr1, pwr2;
 
 SimplePID pid1, pid2;
 
-const int outPin = 4;
-
 // Setup loop *********** /
 void setup() {
   pinMode(outPin, OUTPUT);
 
   Wire.begin(9);                 // Join I2C bus as the slave with address 1
   Wire.onReceive(receiveEvent);  // When the data transmition is detected call receiveEvent function
-  Wire.onRequest(requestEvent);
+  
   Serial.begin(9600);
 
   pinMode(PIN_INPUT1, INPUT_PULLUP);
@@ -128,6 +126,8 @@ void setup() {
   pinMode(m2_dir, OUTPUT);
   pinMode(m2_pwm, OUTPUT);
 
+  //FR->1  FL->2
+
   pid1.setParams(1.8, 0, 0.0000005, 255);           //Change kP,kD,kI,umax only here
   pid2.setParams(1.8, 0, 0.0000005, 255);           //Change kP,kD,kI,umax only here
 
@@ -137,62 +137,7 @@ void setup() {
 // Main loop *********** /
 void loop() {
   delay(100);
-  //digitalWrite(outPin, HIGH);
-  //Serial.println("Output high");
-  //if (start_flag == true) {
-  //start_flag = false;
-  //delay(50);
-  //}
 
-  // String rxString = "";
-  // String strArr[6];
-  // if (Serial.available()) {
-  //   //Keep looping until there is something in the buffer. 
-  //   while (Serial.available()) {
-  //     //Delay to allow byte to arrive in input buffer.
-  //     delay(2);
-  //     //Read a single character from the buffer.
-  //     char ch = Serial.read();
-  //     //Append that single character to a string.
-  //     rxString += ch;
-  //   }
-  //   int stringStart = 0;
-  //   int arrayIndex = 0;
-  //   for (int i = 0; i < rxString.length(); i++) {
-  //     //Get character and check if it's our "special" character.
-  //     if (rxString.charAt(i) == ',') {
-  //       //Clear previous values from array.
-  //       strArr[arrayIndex] = "";
-  //       //Save substring into array.
-  //       strArr[arrayIndex] = rxString.substring(stringStart, i);
-  //       //Set new string starting point.
-  //       stringStart = (i + 1);
-  //       arrayIndex++;
-  //     }
-  //   }
-  //   //Put values from the array into the variables.
-  //   String kP1 = strArr[0];
-  //   String kD1 = strArr[1];
-  //   String kI1 = strArr[2];
-  //   String kP2 = strArr[3];
-  //   String kD2 = strArr[4];
-  //   String kI2 = strArr[5];
-
-  //   //Convert string to int.
-  //   int kP1_value = kP1.toInt();
-  //   int kD1_value = kD1.toInt();
-  //   int kI1_value = kI1.toInt();
-  //   int kP2_value = kP2.toInt();
-  //   int kD2_value = kD2.toInt();
-  //   int kI2_value = kI2.toInt();
-    
-  //   pid1.setParams(kP1_value, kD1_value, kI1_value, 255);
-  //   pid2.setParams(kP2_value, kD2_value, kI2_value, 255);
-  // }
-  //Serial.println("kp");
-  //Serial.println(kP1_value);
-  //Serial.println("kd");
-  //Serial.println(kD1_value);
   // time difference
   currT = micros();
   deltaT = ((float)(currT - prevT));
@@ -203,13 +148,8 @@ void loop() {
     interrupts();
   }
 
-  //Serial.println("s1");
-  //Serial.println(s1);
-  ///Serial.println("target1");
-  //Serial.println(target1);
   pid1.evalu(s1, target1, deltaT, pwr1,m1_pwm);
   pid2.evalu(s2, target2, deltaT, pwr2,m2_pwm);
-
 
   newcount1 = ctr1;
 
@@ -220,52 +160,37 @@ void loop() {
 // Function / Event call ********* /
 void receiveEvent() {
   argument = Wire.read();  // Reads the data sent via I2C
-  Serial.print("Argument: ");
-  Serial.println(argument);
+  // Serial.print("Argument: ");
+  // Serial.println(argument);
   if (argument == 'f') {  // Forward
-    stopp = false;
-    target1 = 25;
-    target2 = 25;
+    target1 = 15;
+    target2 = 15;
     fwd();
   } else if (argument == 'b') {  // Backward
-    stopp = false;
-    target1 = 25;
-    target2 = 25;
+    target1 = 15;
+    target2 = 15;
     bkw();
   } else if (argument == 'l') {  // Left
-    stopp = false;
-    target1 = 25;
-    target2 = 25;
+    target1 = 15;
+    target2 = 15;
     lt();
   } else if (argument == 'r') {  // Right
-    stopp = false;
-    target1 = 25;
-    target2 = 25;
+    target1 = 15;
+    target2 = 15;
     rt();
   } else if (argument == 's') {  //  Stop
-    stopp = true;
     target1 = 0;
     target2 = 0;
   } else if (argument == 'c') {  //  Clock
-    stopp = false;
     target1 = 15;
     target2 = 15;
     cw();
   } else if (argument == 'a') {  //  Anti-Clock
-    stopp = false;
     target1 = 15;
     target2 = 15;
     ccw();
   }
 }
-
-void requestEvent() {
-  String str1 = String(s1)+","+String(s2);
-  // Serial.println(str1);
-  str1.toCharArray(SerialData1, 5);
-  Wire.write(SerialData1);
-}
-
 
 void interrupt_routine1() {
   ctr1++;
@@ -277,22 +202,22 @@ void interrupt_routine2() {
 
 void readspeed() {
   s1 = (newcount1 - oldcount1);
-  Serial.print("IR1 = ");
+  Serial.print("FR = ");
   Serial.print(s1);
-  // Serial.print(",");
-  Serial.print(" PWM1 = ");
-  Serial.print(pwr1);
-  Serial.print(" Target = ");
-  Serial.println(target1);
+  Serial.print(",");
+  // Serial.print(" PWM1 = ");
+  // Serial.print(pwr1);
+  // Serial.print(" Target = ");
+  // Serial.println(target1);
   oldcount1 = newcount1;
 
   s2 = (newcount2 - oldcount2);
-  Serial.print("IR2 = ");
-  Serial.print(s2);
-  Serial.print(" PWM2 = ");
-  Serial.print(pwr2);
-  Serial.print(" Target = ");
-  Serial.println(target2);
+  Serial.print("FL = ");
+  Serial.println(s2);
+  // Serial.print(" PWM2 = ");
+  // Serial.print(pwr2);
+  // Serial.print(" Target = ");
+  // Serial.println(target2);
   oldcount2 = newcount2;
 }
 
