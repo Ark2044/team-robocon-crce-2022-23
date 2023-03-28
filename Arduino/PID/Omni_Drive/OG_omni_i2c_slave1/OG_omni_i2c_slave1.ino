@@ -105,8 +105,6 @@ SimplePID pid1, pid2;
 
 // Setup loop *********** /
 void setup() {
-  pinMode(outPin, OUTPUT);
-
   Wire.begin(9);                 // Join I2C bus as the slave with address 1
   Wire.onReceive(receiveEvent);  // When the data transmition is detected call receiveEvent function
   
