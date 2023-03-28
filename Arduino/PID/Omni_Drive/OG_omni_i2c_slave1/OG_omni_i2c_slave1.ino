@@ -1,7 +1,6 @@
 //I2C Slave1 (address 9) reciever code
 
 #include <Wire.h>  // Arduino library that enables I2C functionality
-char SerialData1[3];
 class SimplePID {
 private:
   float kp, kd, ki, umax;  // Parameters
