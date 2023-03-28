@@ -1,4 +1,4 @@
-#Read data from Slave1 and Slave2
+#Read Serial data from Slave1 and Slave2
 import serial
 import time
 starttime = time.time()
