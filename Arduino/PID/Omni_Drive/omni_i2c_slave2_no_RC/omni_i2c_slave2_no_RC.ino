@@ -1,6 +1,7 @@
-// I2C Slave1 (address 9) reciever code
-
+// I2C Slave2 (address 10) reciever code for HC-SR04 Stops the Gearmotor Through I2C
+// BR->1 BL->2
 #include <Wire.h> // Arduino library that enables I2C functionality
+char SerialData1[3];
 class SimplePID
 {
 private:
@@ -34,15 +35,11 @@ public:
 
     // derivative
     float dedt = (e - eprev) / (deltaT);
-    // Serial.println("e dt");
-    // Serial.println(dedt);
-    //  integral
+
+    // integral
     eintegral = eintegral + e * deltaT;
-    // Serial.println("e int");
-    // Serial.println(eintegral);
-    // Serial.println("k1");
-    // Serial.println(ki);
-    //  control signal
+
+    // control signal
     if (target == 0)
     {
       u = (0.1 * e + kd * dedt);
@@ -66,9 +63,9 @@ public:
     {
       pwr = umax;
     }
-
     // Serial.print(" pwr = ");
     // Serial.println(pwr);
+
     analogWrite(pwm_pin, pwr);
 
     // store previous error
@@ -77,14 +74,13 @@ public:
 };
 
 // Pin definition *********** /
-// List of the variables that will be recieved via I2C ****** /
+// List of the variables that will be recieved via I2C ****** / byte I2C_OnOff;  //defining the variable that will be sent
 char argument;
 int PIN_INPUT1 = 3;
 int PIN_INPUT2 = 2;
 volatile byte state1 = LOW;
 volatile byte state2 = LOW;
 bool stopp = false;
-bool start_flag = true;
 
 // IR
 volatile int ctr1 = 0, ctr2 = 0;
@@ -95,27 +91,29 @@ long currT;
 float deltaT;
 
 // CYTRON
-const int m1_dir = 7;
-const int m1_pwm = 5;
+const int m1_dir = 5;
+const int m1_pwm = 6;
 
-const int m2_dir = 6;
+const int m2_dir = 7;
 const int m2_pwm = 9;
 
 int target1 = 0, target2 = 0;
 
 long prevT = 0;
 
-// motors
 int pwr1, pwr2;
 
 SimplePID pid1, pid2;
 
+const int inPin = 8;
+
 // Setup loop *********** /
 void setup()
 {
-  Wire.begin(9);                // Join I2C bus as the slave with address 1
+  pinMode(inPin, INPUT);
+  Wire.begin(10);               // Join I2C bus as the slave with address 1
   Wire.onReceive(receiveEvent); // When the data transmition is detected call receiveEvent function
-
+  Wire.onRequest(requestEvent);
   Serial.begin(9600);
 
   pinMode(PIN_INPUT1, INPUT_PULLUP);
@@ -130,24 +128,69 @@ void setup()
   pinMode(m2_dir, OUTPUT);
   pinMode(m2_pwm, OUTPUT);
 
-  // FR->1  FL->2
+  // BR->1 BL->2
 
-  pid1.setParams(1.8, 0, 0.0000005, 255); // Change kP,kD,kI,umax only here
-  pid2.setParams(1.8, 0, 0.0000005, 255); // Change kP,kD,kI,umax only here
+  pid1.setParams(1.7, 0, 0.0000005, 255); // Change kP,kD,kI,umax only here
+  pid2.setParams(1.9, 0, 0.0000005, 255); // Change kP,kD,kI,umax only here
   pid1.evalu(s1, target1, deltaT, pwr1, m1_pwm);
   pid2.evalu(s2, target2, deltaT, pwr2, m2_pwm);
-  // Serial.println("Hello");
 }
 
 // Main loop *********** /
 void loop()
 {
   delay(100);
+  // Serial.println("Input Low");
+  //  String rxString = "";
+  //  String strArr[6];
+  //  if (Serial.available()) {
+  //    //Keep looping until there is something in the buffer.
+  //    while (Serial.available()) {
+  //      //Delay to allow byte to arrive in input buffer.
+  //      delay(2);
+  //      //Read a single character from the buffer.
+  //      char ch = Serial.read();
+  //      //Append that single character to a string.
+  //      rxString += ch;
+  //    }
+  //    int stringStart = 0;
+  //    int arrayIndex = 0;
+  //    for (int i = 0; i < rxString.length(); i++) {
+  //      //Get character and check if it's our "special" character.
+  //      if (rxString.charAt(i) == ',') {
+  //        //Clear previous values from array.
+  //        strArr[arrayIndex] = "";
+  //        //Save substring into array.
+  //        strArr[arrayIndex] = rxString.substring(stringStart, i);
+  //        //Set new string starting point.
+  //        stringStart = (i + 1);
+  //        arrayIndex++;
+  //      }
+  //    }
+  //    //Put values from the array into the variables.
+  //    String kP1 = strArr[0];
+  //    String kD1 = strArr[1];
+  //    String kI1 = strArr[2];
+  //    String kP2 = strArr[3];
+  //    String kD2 = strArr[4];
+  //    String kI2 = strArr[5];
 
-  // time difference
+  //   //Convert string to int.
+  //   int kP1_value = kP1.toInt();
+  //   int kD1_value = kD1.toInt();
+  //   int kI1_value = kI1.toInt();
+  //   int kP2_value = kP2.toInt();
+  //   int kD2_value = kD2.toInt();
+  //   int kI2_value = kI2.toInt();
+
+  //   pid1.setParams(kP1_value, kD1_value, kI1_value, 255);
+  //   pid2.setParams(kP2_value, kD2_value, kI2_value, 255);
+  // }
+
   currT = micros();
+
   deltaT = ((float)(currT - prevT));
-  if (currT - prevT > 1000000)
+  if (currT - prevT > 300000)
   {
     noInterrupts();
     newcount1 = ctr1;
@@ -170,31 +213,36 @@ void receiveEvent()
   // Serial.print("Argument: ");
   // Serial.println(argument);
   if (argument == 'f')
-  { // Forward
+  { //  Forward
+    stopp = false;
     target1 = 35;
     target2 = 35;
     fwd();
   }
   else if (argument == 'b')
-  { // Backward
+  { //  Backward
+    stopp = false;
     target1 = 35;
     target2 = 35;
     bkw();
   }
   else if (argument == 'l')
-  { // Left
+  { //  Left
+    stopp = false;
     target1 = 35;
     target2 = 35;
     lt();
   }
   else if (argument == 'r')
-  { // Right
+  { //  Right
+    stopp = false;
     target1 = 35;
     target2 = 35;
     rt();
   }
   else if (argument == 's')
   { //  Stop
+    stopp = true;
     target1 = 0;
     target2 = 0;
     pid1.evalu(s1, target1, deltaT, pwr1, m1_pwm);
@@ -202,16 +250,26 @@ void receiveEvent()
   }
   else if (argument == 'c')
   { //  Clock
+    stopp = false;
     target1 = 15;
     target2 = 15;
     cw();
   }
   else if (argument == 'a')
   { //  Anti-Clock
+    stopp = false;
     target1 = 15;
     target2 = 15;
     ccw();
   }
+}
+
+void requestEvent()
+{
+  String str1 = "BR = " + String(s1) + ", BL = " + String(s2);
+  // Serial.println(str1);
+  str1.toCharArray(SerialData1, 15);
+  Wire.write(SerialData1);
 }
 
 void interrupt_routine1()
@@ -227,7 +285,7 @@ void interrupt_routine2()
 void readspeed()
 {
   s1 = newcount1;
-  Serial.print("FR = ");
+  Serial.print("BR = ");
   Serial.print(s1);
   // Serial.print(",");
   Serial.print(" PWM1 = ");
@@ -236,7 +294,7 @@ void readspeed()
   Serial.println(target1);
 
   s2 = newcount2;
-  Serial.print("FL = ");
+  Serial.print("BL = ");
   Serial.print(s2);
   Serial.print(" PWM2 = ");
   Serial.print(pwr2);
@@ -249,14 +307,14 @@ void readspeed()
 void fwd()
 {
   // Serial.println("Bot moving forward");
-  m1_cwMotor();
-  m2_ccwMotor();
+  m1_ccwMotor();
+  m2_cwMotor();
 }
 void bkw()
 {
   // Serial.println("Bot moving backwards");
-  m1_ccwMotor();
-  m2_cwMotor();
+  m1_cwMotor();
+  m2_ccwMotor();
 }
 void rt()
 {
@@ -273,14 +331,14 @@ void lt()
 void cw()
 {
   // Serial.println("Bot moving clockwise");
-  m1_ccwMotor();
-  m2_ccwMotor();
+  m1_cwMotor();
+  m2_cwMotor();
 }
 void ccw()
 {
   // Serial.println("Bot moving counter-clockwise");
-  m1_cwMotor();
-  m2_cwMotor();
+  m1_ccwMotor();
+  m2_ccwMotor();
 }
 void stp()
 {
