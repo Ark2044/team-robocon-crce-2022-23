@@ -237,7 +237,7 @@ void loop() {
     //         analogWrite(m2_pwm,0);
 
     // }
-    if (PS4.getButtonClick(R3))  //shoot the ring using piston
+    else if (PS4.getButtonClick(R3))  //shoot the ring using piston
     {
       Serial.print(F("\r\nR3"));
       digitalWrite(relay, HIGH);
@@ -253,7 +253,7 @@ void loop() {
     }
 
     //claw
-    if (PS4.getButtonClick(CIRCLE))  //open and close claw
+    else if (PS4.getButtonClick(CIRCLE))  //open and close claw
     {
       Serial.print(F("\r\nCircle"));
       if (relay_pin == 1) {
