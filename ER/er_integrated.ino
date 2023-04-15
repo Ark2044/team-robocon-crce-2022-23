@@ -1,10 +1,10 @@
 #include <TimerOne.h>
-#include <PS4BT.h>          //PS4 Bluetooth
+#include <PS4BT.h>  //PS4 Bluetooth
 // #include <PS4USB.h>      //PS4 Usb
 
-#include <usbhub.h>         //Comment this for PS4 USB
+#include <usbhub.h>  //Comment this for PS4 USB
 #include <Servo.h>
-#include <Wire.h>           //Arduino library that enables I2C functionality
+#include <Wire.h>  //Arduino library that enables I2C functionality
 
 // Satisfy the IDE, which needs to see the include statment in the ino too.
 #ifdef dobogusinclude
@@ -24,10 +24,10 @@ bool a_flag = false;
 //cytron - shooter
 int m1_dir = 25;  //right motor with behind the shooter - pov
 int m2_dir = 23;  //left motor with behind the shooter - pov
-int m1_pwm = 9;
-int m2_pwm = 8;
-int ir_1 = 18;    //left motor
-int ir_2 = 19;    //right motor
+int m1_pwm = 8;
+int m2_pwm = 9;
+int ir_1 = 18;  //left motor
+int ir_2 = 19;  //right motor
 
 //y-axis of shooter
 int enA = 4;
@@ -35,9 +35,9 @@ int in1 = 32;
 int in2 = 34;
 
 //x-axis of shooter
+int enb = 5;
 int in3 = 36;
 int in4 = 38;
-int enb = 5;
 
 long long currT = 0;
 
@@ -56,13 +56,13 @@ int pwm1 = 0;
 int pwm2 = 0;
 
 //piston - shooter
-int relay = 47;
+int relay = 49;
 
 // servos for the claw
 Servo servo1;
 Servo servo2;
-int pos1 = 0;
-int pos2 = 180;
+int s1 = 11;
+int s2 = 12;
 
 // cascading lift motor
 int inc1 = 33;
@@ -75,14 +75,14 @@ int inf2 = 37;
 int enbf = 4;
 
 // limit switch for flipping
-int limit_switch1 = 39;
-int limit_switch2 = 40;
+// int limit_switch1 = 39;
+// int limit_switch2 = 40;
 
-//limit switch for cascading lift
-int limit_switch3 = 41;
+// //limit switch for cascading lift
+// int limit_switch3 = 41;
 
 // relay claw
-int relay_pin = 2;
+int relay_pin = 47;
 
 //I2C
 String readString;  // defining the string
@@ -93,24 +93,31 @@ byte I2C_OnOff;  //defining the variable that will be sent
 long long int prevT1 = 0, currT1, prevT2 = 0, currT2;
 
 
-// Use this for PS4 USB and comment PS4 BT
+//Use this for PS4 USB and comment PS4 BT
 // USB Usb;
 // PS4USB PS4(&Usb);
 
 
 // Use this (USB Usb to PS4BT PS4(&Btd, PAIR)) for PS4 BT and comment PS4 USB
 USB Usb;
-BTD Btd(&Usb);
+//USBHub Hub1(&Usb); // Some dongles have a hub inside
+BTD Btd(&Usb);  // You have to create the Bluetooth Dongle instance like so
+
+// You will need to hold down the PS and Share button at the same time, the PS4 controller will then start to blink rapidly indicating that it is in pairing mode
 PS4BT PS4(&Btd, PAIR);
+
+
+//bool printAngle, printTouch;
+//uint8_t oldL2Value, oldR2Value;
 
 bool printAngle, printTouch;
 uint8_t oldL2Value, oldR2Value;
 
 void setup() {
+  //
   //slot sensors for shooter
   pinMode(ir_1, INPUT);
   pinMode(ir_2, INPUT);
-
   //cytron-shooter
   pinMode(m1_dir, OUTPUT);
   pinMode(m1_pwm, OUTPUT);
@@ -118,13 +125,11 @@ void setup() {
   pinMode(m2_pwm, OUTPUT);
   digitalWrite(m1_dir, LOW);
   digitalWrite(m2_dir, LOW);
-
   //piston shooter
   pinMode(relay, OUTPUT);
 
   Timer1.initialize();
   Timer1.attachInterrupt(readmotor);
-
   //interrupt fo slot sensor - shooter
   attachInterrupt(digitalPinToInterrupt(ir_1), interrupt_routine1, RISING);
   attachInterrupt(digitalPinToInterrupt(ir_2), interrupt_routine2, RISING);
@@ -158,11 +163,10 @@ void setup() {
   analogWrite(enbf, 255);
 
   // limit switches for flipping
-  pinMode(limit_switch1, INPUT);
-  pinMode(limit_switch2, INPUT);
-
-  // limit switch for cascading lift
-  pinMode(limit_switch3, INPUT);
+  // pinMode(limit_switch1, INPUT);
+  // pinMode(limit_switch2, INPUT);
+  // // limit switch for cascading lift
+  // pinMode(limit_switch3, INPUT);
 
   //relay for piston
   pinMode(relay_pin, OUTPUT);
@@ -315,7 +319,7 @@ void flip_clock() {
 
 void loop() {
   Usb.Task();
-
+  
   if (PS4.connected()) {
     int right_x = map(PS4.getAnalogHat(RightHatX), 0, 255, -255, 255);
     int right_y = map(PS4.getAnalogHat(RightHatY), 0, 255, 255, -255);
@@ -375,12 +379,19 @@ void loop() {
     {
       Serial.println("Retract Piston");
       digitalWrite(relay, LOW);
-      // moves the servos on the claw
-      //              for (pos1 = 0 ,pos2 = 180 ; pos1 <= 180, pos2 >= 0 ; pos1 += 1 ,pos2-=1)
-      //              {
-      //                  servo1.write(pos1);
-      //                  servo2.write(pos2);
-      //              }
+    }
+    if(PS4.getButtonPress(R2))
+    {
+      servo1.attach(s1);
+      servo2.attach(s2);
+      for (int i = 0; i <= 65 ; i++) {
+        Serial.println(i);
+        servo1.writeMicroseconds(2000);
+        Serial.println(i);
+        servo2.writeMicroseconds(1000);
+      }
+      servo1.detach();
+      servo2.detach();
     }
     if (PS4.getButtonPress(CROSS))  //stop the flywheel
     {
@@ -418,7 +429,7 @@ void loop() {
       //        digitalWrite(inc2, LOW);
       //      }
     } else {
-      Serial.println("Stop Lift");
+      // Serial.println("Stop Lift");
       digitalWrite(inc1, LOW);
       digitalWrite(inc2, LOW);
     }
@@ -427,13 +438,13 @@ void loop() {
     //flip the claw
     if (PS4.getButtonPress(L2) && PS4.getButtonPress(SQUARE))  //clock
     {
-      Serial.println("Flip Claw Clockwise");
+      Serial.println("flip clawclockwise");
       flip_clock();
     }
 
     else if (PS4.getButtonPress(SQUARE))  //anticlock
     {
-      Serial.println("Flip Claw Anti-Clockwise");
+      Serial.println("Flip Claw antiClockwise");
       flip_anticlock();
       //      if (digitalRead(limit_switch2) == HIGH and digitalRead(limit_switch1 == HIGH))  // run the following when claw completes 180 degrees
       //      {
@@ -441,16 +452,16 @@ void loop() {
       //        digitalWrite(inf2, LOW);
       //      }
     } else {
-      Serial.println("Stop Claw");
+      // Serial.println("Stop Claw");
       digitalWrite(inf1, LOW);
       digitalWrite(inf2, LOW);
     }
 
 
-    // Target 35
+    // Target 15
 
     if (PS4.getButtonPress(L2) && PS4.getButtonPress(UP)) {
-      Serial.println("Forward: target 35");
+      Serial.println("Forward: target 15");
       // Serial2.write("f");
       // delay(100);
       if (!f_flag)  //send only once string f
@@ -477,7 +488,7 @@ void loop() {
     }
 
     else if (PS4.getButtonPress(L2) && PS4.getButtonPress(DOWN)) {
-      Serial.println("Backward: target 35");
+      Serial.println("Backward: target 15");
       // Serial2.write("b");
       // delay(100);
       if (!b_flag) {
@@ -502,7 +513,7 @@ void loop() {
     }
 
     else if (PS4.getButtonPress(L2) && PS4.getButtonPress(LEFT)) {
-      Serial.println("LEFT: : target 35");
+      Serial.println("LEFT: : target 15");
       // Serial2.write("l");
       // delay(100);
       if (!l_flag) {
@@ -529,7 +540,7 @@ void loop() {
     }
 
     else if (PS4.getButtonPress(L2) && PS4.getButtonPress(RIGHT)) {
-      Serial.println("RIGHT: : target 35");
+      Serial.println("RIGHT: : target 15");
       // Serial2.write("r");
       // delay(100);
       if (!r_flag) {
@@ -554,63 +565,63 @@ void loop() {
       a_flag = false;
     }
 
-    else if (PS4.getButtonPress(L2) && PS4.getButtonPress(L1)) {
-      Serial.println("Anticlockwise: : target 35");
-      // Serial2.write("a");
-      // delay(100);
-      if (!a_flag) {
-        //        Serial.println("L1-1");
-        I2C_OnOff = 'A';
+    // else if (PS4.getButtonPress(L2) && PS4.getButtonPress(L1)) {
+    //   Serial.println("Anticlockwise: : target 35");
+    //   // Serial2.write("a");
+    //   // delay(100);
+    //   if (!a_flag) {
+    //     //        Serial.println("L1-1");
+    //     I2C_OnOff = 'A';
 
-        Wire.beginTransmission(9);   // Opening the transmission channel to device with the name 1
-        Wire.write(I2C_OnOff);       // Sending the desired information via I2C to the slave device
-        Wire.endTransmission();      // Closing the transmission channel
-        Wire.beginTransmission(10);  // Opening the transmission channel to device with the name 1
-        Wire.write(I2C_OnOff);       // Sending the desired information via I2C to the slave device
-        Wire.endTransmission();      // Closing the transmission channel
-        a_flag = true;
-        // delay(100);
-      }
+    //     Wire.beginTransmission(9);   // Opening the transmission channel to device with the name 1
+    //     Wire.write(I2C_OnOff);       // Sending the desired information via I2C to the slave device
+    //     Wire.endTransmission();      // Closing the transmission channel
+    //     Wire.beginTransmission(10);  // Opening the transmission channel to device with the name 1
+    //     Wire.write(I2C_OnOff);       // Sending the desired information via I2C to the slave device
+    //     Wire.endTransmission();      // Closing the transmission channel
+    //     a_flag = true;
+    //     // delay(100);
+    //   }
 
-      f_flag = false;
-      b_flag = false;
-      l_flag = false;
-      r_flag = false;
-      s_flag = false;
-      c_flag = false;
-    }
+    //   f_flag = false;
+    //   b_flag = false;
+    //   l_flag = false;
+    //   r_flag = false;
+    //   s_flag = false;
+    //   c_flag = false;
+    // }
 
-    else if (PS4.getButtonPress(L2) && PS4.getButtonPress(R1)) {
-      Serial.println("Clockwise: target 35");
-      // Serial2.write("c");
-      // delay(100);
-      if (!c_flag) {
-        //        Serial.println("R1-1");
-        I2C_OnOff = 'C';
+    // else if (PS4.getButtonPress(L2) && PS4.getButtonPress(R1)) {
+    //   Serial.println("Clockwise: target 35");
+    //   // Serial2.write("c");
+    //   // delay(100);
+    //   if (!c_flag) {
+    //     //        Serial.println("R1-1");
+    //     I2C_OnOff = 'C';
 
-        Wire.beginTransmission(9);   // Opening the transmission channel to device with the name 1
-        Wire.write(I2C_OnOff);       // Sending the desired information via I2C to the slave device
-        Wire.endTransmission();      // Closing the transmission channel
-        Wire.beginTransmission(10);  // Opening the transmission channel to device with the name 1
-        Wire.write(I2C_OnOff);       // Sending the desired information via I2C to the slave device
-        Wire.endTransmission();      // Closing the transmission channel
-        c_flag = true;
-        // delay(100);
-      }
+    //     Wire.beginTransmission(9);   // Opening the transmission channel to device with the name 1
+    //     Wire.write(I2C_OnOff);       // Sending the desired information via I2C to the slave device
+    //     Wire.endTransmission();      // Closing the transmission channel
+    //     Wire.beginTransmission(10);  // Opening the transmission channel to device with the name 1
+    //     Wire.write(I2C_OnOff);       // Sending the desired information via I2C to the slave device
+    //     Wire.endTransmission();      // Closing the transmission channel
+    //     c_flag = true;
+    //     // delay(100);
+    //   }
 
-      f_flag = false;
-      b_flag = false;
-      l_flag = false;
-      r_flag = false;
-      s_flag = false;
-      a_flag = false;
-    }
+    //   f_flag = false;
+    //   b_flag = false;
+    //   l_flag = false;
+    //   r_flag = false;
+    //   s_flag = false;
+    //   a_flag = false;
+    // }
 
-    //Target 25
+    //Target 10
 
     //Serial.println("In");
     else if (PS4.getButtonPress(UP)) {
-      Serial.println("UP: target 25");
+      Serial.println("UP: target 10");
       // Serial2.write("f");
       // delay(100);
       if (!f_flag) {  //send only once string f
@@ -636,7 +647,7 @@ void loop() {
     }
 
     else if (PS4.getButtonPress(DOWN)) {
-      Serial.println("DOWN: target 25");
+      Serial.println("DOWN: target 10");
       // Serial2.write("b");
       // delay(100);
       if (!b_flag) {
@@ -662,7 +673,7 @@ void loop() {
     }
 
     else if (PS4.getButtonPress(LEFT)) {
-      Serial.println("LEFT: target 25");
+      Serial.println("LEFT: target 10");
       // Serial2.write("l");
       // delay(100);
       if (!l_flag) {
@@ -689,7 +700,7 @@ void loop() {
     }
 
     else if (PS4.getButtonPress(RIGHT)) {
-      Serial.println("RIGHT: target 25");
+      Serial.println("RIGHT: target 10");
       // Serial2.write("r");
       // delay(100);
       if (!r_flag) {
@@ -714,59 +725,60 @@ void loop() {
       a_flag = false;
     }
 
-    else if (PS4.getButtonPress(L1)) {
-      Serial.println("Anticlockwise: target 25");
-      // Serial2.write("a");
-      // delay(100);
-      if (!a_flag) {
-        // Serial.println("L1");
-        I2C_OnOff = 'a';
+    // else if (PS4.getButtonPress(L1)) {
+    //   Serial.println("Anticlockwise: target 25");
+    //   // Serial2.write("a");
+    //   // delay(100);
+    //   if (!a_flag) {
+    //     // Serial.println("L1");
+    //     I2C_OnOff = 'a';
 
 
-        Wire.beginTransmission(9);   // Opening the transmission channel to device with the name 1
-        Wire.write(I2C_OnOff);       // Sending the desired information via I2C to the slave device
-        Wire.endTransmission();      // Closing the transmission channel
-        Wire.beginTransmission(10);  // Opening the transmission channel to device with the name 1
-        Wire.write(I2C_OnOff);       // Sending the desired information via I2C to the slave device
-        Wire.endTransmission();      // Closing the transmission channel
-        a_flag = true;
-        // delay(100);
-      }
+    //     Wire.beginTransmission(9);   // Opening the transmission channel to device with the name 1
+    //     Wire.write(I2C_OnOff);       // Sending the desired information via I2C to the slave device
+    //     Wire.endTransmission();      // Closing the transmission channel
+    //     Wire.beginTransmission(10);  // Opening the transmission channel to device with the name 1
+    //     Wire.write(I2C_OnOff);       // Sending the desired information via I2C to the slave device
+    //     Wire.endTransmission();      // Closing the transmission channel
+    //     a_flag = true;
+    //     // delay(100);
+    //   }
 
-      f_flag = false;
-      b_flag = false;
-      l_flag = false;
-      r_flag = false;
-      s_flag = false;
-      c_flag = false;
-    }
+    //   f_flag = false;
+    //   b_flag = false;
+    //   l_flag = false;
+    //   r_flag = false;
+    //   s_flag = false;
+    //   c_flag = false;
+    // }
 
-    else if (PS4.getButtonPress(R1)) {
-      Serial.println("Clockwise: target 25");
-      // Serial2.write("c");
-      // delay(100);
-      if (!c_flag) {
-        // Serial.println("R1");
-        I2C_OnOff = 'c';
+    // else if (PS4.getButtonPress(R1)) {
+    //   Serial.println("Clockwise: target 25");
+    //   // Serial2.write("c");
+    //   // delay(100);
+    //   if (!c_flag) {
+    //     // Serial.println("R1");
+    //     I2C_OnOff = 'c';
 
 
-        Wire.beginTransmission(9);   // Opening the transmission channel to device with the name 1
-        Wire.write(I2C_OnOff);       // Sending the desired information via I2C to the slave device
-        Wire.endTransmission();      // Closing the transmission channel
-        Wire.beginTransmission(10);  // Opening the transmission channel to device with the name 1
-        Wire.write(I2C_OnOff);       // Sending the desired information via I2C to the slave device
-        Wire.endTransmission();      // Closing the transmission channel
-        c_flag = true;
-        // delay(100);
-      }
+    //     Wire.beginTransmission(9);   // Opening the transmission channel to device with the name 1
+    //     Wire.write(I2C_OnOff);       // Sending the desired information via I2C to the slave device
+    //     Wire.endTransmission();      // Closing the transmission channel
+    //     Wire.beginTransmission(10);  // Opening the transmission channel to device with the name 1
+    //     Wire.write(I2C_OnOff);       // Sending the desired information via I2C to the slave device
+    //     Wire.endTransmission();      // Closing the transmission channel
+    //     c_flag = true;
+    //     // delay(100);
+    //   }
 
-      f_flag = false;
-      b_flag = false;
-      l_flag = false;
-      r_flag = false;
-      s_flag = false;
-      a_flag = false;
-    } else {
+    //   f_flag = false;
+    //   b_flag = false;
+    //   l_flag = false;
+    //   r_flag = false;
+    //   s_flag = false;
+    //   a_flag = false;
+    // } 
+    else {
       Serial.println("Stop");
       // Serial2.write("s");
       // delay(100);
