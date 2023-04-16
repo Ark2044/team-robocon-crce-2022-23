@@ -198,7 +198,7 @@ void loop() {
   //Serial.println(kD1_value);
   // time difference
   currT = micros();
-  if (currT - prevT > 1000000) {
+  if (currT - prevT > 300000) {
     noInterrupts();
     newcount1 = ctr1;
     newcount2 = ctr2;
