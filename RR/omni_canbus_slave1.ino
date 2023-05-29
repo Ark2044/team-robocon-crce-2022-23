@@ -1,4 +1,4 @@
-//Omni Canbus Slave1 reciever code 
+//Omni Canbus Slave1 reciever code
 //FR->m2 FL->m1
 #include <SPI.h>
 #include <mcp2515.h>
@@ -152,7 +152,8 @@ void loop() {
     ctr2 = 0;
     interrupts();
   }
-
+  // analogWrite(m1_pwm, 50);
+  // analogWrite(m2_pwm, 50);
   // pid1.evalu(s1, target1, deltaT, pwr1, m1_pwm);
   // pid2.evalu(s2, target2, deltaT, pwr2, m2_pwm);
 
@@ -241,21 +242,21 @@ void interrupt_routine2() {
 
 void readspeed() {
   s1 = newcount1;
-  // Serial.print("FR = ");
-  // Serial.print(s1);
-  // // Serial.print(",");
-  // Serial.print(" PWM1 = ");
-  // Serial.print(pwr1);
-  // Serial.print(" Target = ");
-  // Serial.println(target1);
+  Serial.print("FL = ");
+  Serial.print(s1);
+  // Serial.print(",");
+  Serial.print(" PWM1 = ");
+  Serial.print(pwr1);
+  Serial.print(" Target = ");
+  Serial.println(target1);
 
   s2 = newcount2;
-  // Serial.print("FL = ");
-  // Serial.print(s2);
-  // Serial.print(" PWM2 = ");
-  // Serial.print(pwr2);
-  // Serial.print(" Target = ");
-  // Serial.println(target2);
+  Serial.print("FR = ");
+  Serial.print(s2);
+  Serial.print(" PWM2 = ");
+  Serial.print(pwr2);
+  Serial.print(" Target = ");
+  Serial.println(target2);
 }
 
 //HIGH LEVEL MOTOR FUNCTIONS (fwd, bkw, rt, lt, cw, ccw)
