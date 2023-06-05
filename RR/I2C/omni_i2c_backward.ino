@@ -1,5 +1,5 @@
-//I2C Slave2 (address 10) reciever code for HC-SR04 Stops the Gearmotor Through I2C
-//BR->m1 BL->m2
+//I2C Backward (address 10) reciever code for HC-SR04 Stops the Gearmotor Through I2C
+//BR->m2 BL->m1
 #include <Wire.h>  // Arduino library that enables I2C functionality
 char SerialData1[3];
 class SimplePID {
@@ -101,15 +101,13 @@ int pwr1, pwr2;
 
 SimplePID pid1, pid2;
 
-const int inPin = 8;
-
 // Setup loop *********** /
 void setup() {
-  Serial.begin(9600);
-  pinMode(inPin, INPUT);
-  Wire.begin(10);                // Join I2C bus as the slave with address 1
+  Serial.begin(115200);
+  Wire.setClock(400000L);
+  Wire.begin(10);                // Join I2C bus as the slave with address 10
   Wire.onReceive(receiveEvent);  // When the data transmition is detected call receiveEvent function
-  Wire.onRequest(requestEvent);
+  // Wire.onRequest(requestEvent);
   
 
   pinMode(PIN_INPUT1, INPUT);
@@ -124,65 +122,17 @@ void setup() {
   pinMode(m2_dir, OUTPUT);
   pinMode(m2_pwm, OUTPUT);
 
-  //BR->1 BL->2
+  //BR->2 BL->1
 
   pid1.setParams(0.5, 0.1, 0.3, 125);  //Change kP,kD,kI,umax only here
   pid2.setParams(0.5, 0.1, 0.3, 125);  //Change kP,kD,kI,umax only here
 
-  pid1.evalu(s1, target1,pwr1,m1_pwm);
-  pid2.evalu(s2, target2,pwr2,m2_pwm);
+  // pid1.evalu(s1, target1,pwr1,m1_pwm);
+  // pid2.evalu(s2, target2,pwr2,m2_pwm);
 }
 
 // Main loop *********** /
 void loop() {
-  // delay(25);
-  //Serial.println("Input Low");
-  // String rxString = "";
-  // String strArr[6];
-  // if (Serial.available()) {
-  //   //Keep looping until there is something in the buffer.
-  //   while (Serial.available()) {
-  //     //Delay to allow byte to arrive in input buffer.
-  //     delay(2);
-  //     //Read a single character from the buffer.
-  //     char ch = Serial.read();
-  //     //Append that single character to a string.
-  //     rxString += ch;
-  //   }
-  //   int stringStart = 0;
-  //   int arrayIndex = 0;
-  //   for (int i = 0; i < rxString.length(); i++) {
-  //     //Get character and check if it's our "special" character.
-  //     if (rxString.charAt(i) == ',') {
-  //       //Clear previous values from array.
-  //       strArr[arrayIndex] = "";
-  //       //Save substring into array.
-  //       strArr[arrayIndex] = rxString.substring(stringStart, i);
-  //       //Set new string starting point.
-  //       stringStart = (i + 1);
-  //       arrayIndex++;
-  //     }
-  //   }
-  //   //Put values from the array into the variables.
-  //   String kP1 = strArr[0];
-  //   String kD1 = strArr[1];
-  //   String kI1 = strArr[2];
-  //   String kP2 = strArr[3];
-  //   String kD2 = strArr[4];
-  //   String kI2 = strArr[5];
-
-  //   //Convert string to int.
-  //   int kP1_value = kP1.toInt();
-  //   int kD1_value = kD1.toInt();
-  //   int kI1_value = kI1.toInt();
-  //   int kP2_value = kP2.toInt();
-  //   int kD2_value = kD2.toInt();
-  //   int kI2_value = kI2.toInt();
-
-  //   pid1.setParams(kP1_value, kD1_value, kI1_value, 255);
-  //   pid2.setParams(kP2_value, kD2_value, kI2_value, 255);
-  // }
-
   currT = micros();
 
   if (currT - prevT > 300000) {
@@ -196,8 +146,8 @@ void loop() {
     interrupts();
   }
 
-  pid1.evalu(s1, target1, pwr1, m1_pwm);
-  pid2.evalu(s2, target2, pwr2, m2_pwm);
+  // pid1.evalu(s1, target1, pwr1, m1_pwm);
+  // pid2.evalu(s2, target2, pwr2, m2_pwm);
 }
 
 
@@ -208,51 +158,136 @@ void receiveEvent() {
   argument = Wire.read();  // Reads the data sent via I2C
   Serial.print("Argument: ");
   Serial.println(argument);
-  if (argument == 'f') {  // Forward
+  if (argument == '1') {  // Slow Forward
     target1 = 20;
     target2 = 20;
     fwd();
-  } else if (argument == 'b') {  // Backward
+    analogWrite(m1_pwm, 45);
+    analogWrite(m2_pwm, 45);
+  } else if (argument == '2') {  // Slow Backward
     target1 = 20;
     target2 = 20;
     bkw();
-  } else if (argument == 'l') {  // Left
+    analogWrite(m1_pwm, 45);
+    analogWrite(m2_pwm, 45);
+  } else if (argument == '3') {  // Slow Left
     target1 = 20;
     target2 = 20;
     lt();
-  } else if (argument == 'r') {  // Right
+    analogWrite(m1_pwm, 45);
+    analogWrite(m2_pwm, 45);
+  } else if (argument == '4') {  // Slow Right
     target1 = 20;
     target2 = 20;
     rt();
-  } else if (argument == 's') {  //  Stop
+    analogWrite(m1_pwm, 45);
+    analogWrite(m2_pwm, 45);
+  } else if (argument == '5') {  // Forward
+    target1 = 20;
+    target2 = 20;
+    fwd();
+    analogWrite(m1_pwm, 85);
+    analogWrite(m2_pwm, 85);
+  } else if (argument == '6') {  // Backward
+    target1 = 20;
+    target2 = 20;
+    bkw();
+    analogWrite(m1_pwm, 85);
+    analogWrite(m2_pwm, 85);
+  } else if (argument == '7') {  // Left
+    target1 = 20;
+    target2 = 20;
+    lt();
+    analogWrite(m1_pwm, 85);
+    analogWrite(m2_pwm, 85);
+  } else if (argument == '8') {  // Right
+    target1 = 20;
+    target2 = 20;
+    rt();
+    analogWrite(m1_pwm, 85);
+    analogWrite(m2_pwm, 85);
+  } else if (argument == '9') {  // Fast Forward
+    target1 = 20;
+    target2 = 20;
+    fwd();
+    analogWrite(m1_pwm, 100);
+    analogWrite(m2_pwm, 100);
+  } else if (argument == '10') {  // Fast Backward
+    target1 = 20;
+    target2 = 20;
+    bkw();
+    analogWrite(m1_pwm, 100);
+    analogWrite(m2_pwm, 100);
+  } else if (argument == '11') {  // Fast Left
+    target1 = 20;
+    target2 = 20;
+    lt();
+    analogWrite(m1_pwm, 100);
+    analogWrite(m2_pwm, 100);
+  } else if (argument == '12') {  // Fast Right
+    target1 = 20;
+    target2 = 20;
+    rt();
+    analogWrite(m1_pwm, 100);
+    analogWrite(m2_pwm, 100);
+  } else if (argument == '13') {  // Slow Clock
+    target1 = 20;
+    target2 = 20;
+    cw();
+    analogWrite(m1_pwm, 20);
+    analogWrite(m2_pwm, 20);
+  } else if (argument == '14') {  // Slow Anti Clock
+    target1 = 20;
+    target2 = 20;
+    ccw();
+    analogWrite(m1_pwm, 20);
+    analogWrite(m2_pwm, 20);
+  } else if (argument == '15') {  // Clock
+    target1 = 20;
+    target2 = 20;
+    cw();
+    analogWrite(m1_pwm, 35);
+    analogWrite(m2_pwm, 35);
+  } else if (argument == '16') {  // Anti Clock
+    target1 = 20;
+    target2 = 20;
+    ccw();
+    analogWrite(m1_pwm, 35);
+    analogWrite(m2_pwm, 35);
+  }
+
+  else if (argument == '17') {  // Forward wheels
+    target1 = 20;
+    target2 = 20;
+    fwd();
+    analogWrite(m1_pwm, 0);
+    analogWrite(m2_pwm, 0);
+  } else if (argument == '18') {  // Backward wheels
+    target1 = 20;
+    target2 = 20;
+    fwd();
+    analogWrite(m1_pwm, 100);
+    analogWrite(m2_pwm, 100);
+  } else if (argument == '19') {  // Diagonal FL && RR
+    target1 = 20;
+    target2 = 20;
+    fwd();
+    analogWrite(m1_pwm, 0);
+    analogWrite(m2_pwm, 100);
+  }
+
+  else if (argument == '20') {  // Diagonal FR && RL
+    target1 = 20;
+    target2 = 20;
+    fwd();
+    analogWrite(m1_pwm, 100);
+    analogWrite(m2_pwm, 0);
+  }
+
+  else if (argument == '0') {  //  Stop
     target1 = 0;
     target2 = 0;
     stp();
-  } else if (argument == 'c') {  //  Clock
-    target1 = 15;
-    target2 = 15;
-    cw();
-  } else if (argument == 'a') {  //  Anti-Clock
-    target1 = 15;
-    target2 = 15;
-    ccw();
-  }
-  else if (argument == 'F') {  // Forward
-    target1 = 25;
-    target2 = 25;
-    fwd();
-  } else if (argument == 'B') {  // Backward
-    target1 = 25;
-    target2 = 25;
-    bkw();
-  } else if (argument == 'L') {  // Left
-    target1 = 25;
-    target2 = 25;
-    lt();
-  } else if (argument == 'R') {  // Right
-    target1 = 25;
-    target2 = 25;
-    rt();
   }
 }
 
@@ -293,40 +328,40 @@ void readspeed() {
 }
 
 
-//HIGH LEVEL MOTOR FUNCTIONS (fwd, bkw, rt, lt, cw, ccw)
-//BR->m1 BL->m2
+///HIGH LEVEL MOTOR FUNCTIONS (fwd, bkw, rt, lt, cw, ccw)
+//RR->m2 RL->m1
 void fwd() {
-  //Serial.println("Bot moving forward");
-  m1_cwMotor();
-  m2_ccwMotor();
-}
-void bkw() {
-  //Serial.println("Bot moving backwards");
+  Serial.println("Bot moving forward");
   m1_cwMotor();
   m2_cwMotor();
 }
+void bkw() {
+  Serial.println("Bot moving backwards");
+  m1_ccwMotor();
+  m2_ccwMotor();
+}
 void rt() {
-  //Serial.println("Bot moving right");
+  Serial.println("Bot moving right");
   m1_ccwMotor();
   m2_cwMotor();
 }
 void lt() {
-  //Serial.println("Bot moving left");
-  m1_ccwMotor();
-  m2_ccwMotor();
-}
-void cw() {
-  //Serial.println("Bot moving clockwise");
-  m1_ccwMotor();
+  Serial.println("Bot moving left");
+  m1_cwMotor();
   m2_ccwMotor();
 }
 void ccw() {
-  //Serial.println("Bot moving counter-clockwise");
+  Serial.println("Bot moving clockwise");
   m1_ccwMotor();
   m2_cwMotor();
 }
+void cw() {
+  Serial.println("Bot moving counter-clockwise");
+  m1_cwMotor();
+  m2_ccwMotor();
+}
 void stp() {
-  //Serial.println("Bot stop");
+  Serial.println("Bot stop");
   m1_stopMotor();
   m2_stopMotor();
 }
@@ -336,31 +371,35 @@ void stp() {
 void m1_cwMotor() {
   // Serial.println("Motor A clockwise");
   digitalWrite(m1_dir, HIGH);
-  // analogWrite(m1_pwm, 50);
+  //analogWrite(m1_pwm, pwr1);
 }
+
 void m1_ccwMotor() {
   // Serial.println("Motor A counter-clockwise");
   digitalWrite(m1_dir, LOW);
-  // analogWrite(m1_pwm, 50);
+  //analogWrite(m1_pwm, pwr1);
 }
+
 void m2_cwMotor() {
   // Serial.println("Motor B clockwise");
   digitalWrite(m2_dir, HIGH);
-  // analogWrite(m2_pwm, 50);
+  //analogWrite(m2_pwm, pwr2);
 }
+
 void m2_ccwMotor() {
   // Serial.println("Motor B counter-clockwise");
   digitalWrite(m2_dir, LOW);
-  // analogWrite(m2_pwm, 50);
+  //analogWrite(m2_pwm, pwr2);
 }
 
 void m1_stopMotor() {
   // Serial.println("Motor A stop");
-  // analogWrite(m1_pwm, 0);
+  analogWrite(m1_pwm, 0);
   // analogWrite(m1_pwm, pwr1);
 }
+
 void m2_stopMotor() {
   // Serial.println("Motor B stop");
-  // analogWrite(m2_pwm, 0);
+  analogWrite(m2_pwm, 0);
   // analogWrite(m1_pwm, pwr2);
 }

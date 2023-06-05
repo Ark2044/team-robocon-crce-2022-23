@@ -1,4 +1,4 @@
-//Omni Canbus Slave2 reciever code
+//Omni Canbus Backward reciever code
 //RR->m2 RL->m1
 #include <SPI.h>
 #include <mcp2515.h>
@@ -164,71 +164,137 @@ void loop() {
     Serial.print("Argument: ");
     Serial.println(argument);
 
-    if (argument == 'f') {  // Forward
-      target1 = 20;
-      target2 = 20;
-      fwd();
-      analogWrite(m1_pwm, 75);
-      analogWrite(m2_pwm, 75);
-    } else if (argument == 'b') {  // Backward
-      target1 = 20;
-      target2 = 20;
-      bkw();
-      analogWrite(m1_pwm, 75);
-      analogWrite(m2_pwm, 75);
-    } else if (argument == 'l') {  // Left
-      target1 = 20;
-      target2 = 20;
-      lt();
-      analogWrite(m1_pwm, 75);
-      analogWrite(m2_pwm, 75);
-    } else if (argument == 'r') {  // Right
-      target1 = 20;
-      target2 = 20;
-      rt();
-      analogWrite(m1_pwm, 75);
-      analogWrite(m2_pwm, 75);
-    } else if (argument == 's') {  //  Stop
-      target1 = 0;
-      target2 = 0;
-      stp();
-    } else if (argument == 'c') {  //  Clock
-      target1 = 15;
-      target2 = 15;
-      cw();
-      analogWrite(m1_pwm, 40);
-      analogWrite(m2_pwm, 40);
-    } else if (argument == 'a') {  //  Anti-Clock
-      target1 = 15;
-      target2 = 15;
-      ccw();
-      analogWrite(m1_pwm, 40);
-      analogWrite(m2_pwm, 40);
-    } else if (argument == 'F') {  // Forward
-      target1 = 25;
-      target2 = 25;
-      fwd();
-      analogWrite(m1_pwm, 55);
-      analogWrite(m2_pwm, 55);
-    } else if (argument == 'B') {  // Backward
-      target1 = 25;
-      target2 = 25;
-      bkw();
-      analogWrite(m1_pwm, 55);
-      analogWrite(m2_pwm, 55);
-    } else if (argument == 'L') {  // Left
-      target1 = 25;
-      target2 = 25;
-      lt();
-      analogWrite(m1_pwm, 55);
-      analogWrite(m2_pwm, 55);
-    } else if (argument == 'R') {  // Right
-      target1 = 25;
-      target2 = 25;
-      rt();
-      analogWrite(m1_pwm, 55);
-      analogWrite(m2_pwm, 55);
-    }
+    if (argument == '1') {  // Slow Forward
+    target1 = 20;
+    target2 = 20;
+    fwd();
+    analogWrite(m1_pwm, 45);
+    analogWrite(m2_pwm, 45);
+  } else if (argument == '2') {  // Slow Backward
+    target1 = 20;
+    target2 = 20;
+    bkw();
+    analogWrite(m1_pwm, 45);
+    analogWrite(m2_pwm, 45);
+  } else if (argument == '3') {  // Slow Left
+    target1 = 20;
+    target2 = 20;
+    lt();
+    analogWrite(m1_pwm, 45);
+    analogWrite(m2_pwm, 45);
+  } else if (argument == '4') {  // Slow Right
+    target1 = 20;
+    target2 = 20;
+    rt();
+    analogWrite(m1_pwm, 45);
+    analogWrite(m2_pwm, 45);
+  } else if (argument == '5') {  // Forward
+    target1 = 20;
+    target2 = 20;
+    fwd();
+    analogWrite(m1_pwm, 85);
+    analogWrite(m2_pwm, 85);
+  } else if (argument == '6') {  // Backward
+    target1 = 20;
+    target2 = 20;
+    bkw();
+    analogWrite(m1_pwm, 85);
+    analogWrite(m2_pwm, 85);
+  } else if (argument == '7') {  // Left
+    target1 = 20;
+    target2 = 20;
+    lt();
+    analogWrite(m1_pwm, 85);
+    analogWrite(m2_pwm, 85);
+  } else if (argument == '8') {  // Right
+    target1 = 20;
+    target2 = 20;
+    rt();
+    analogWrite(m1_pwm, 85);
+    analogWrite(m2_pwm, 85);
+  } else if (argument == '9') {  // Fast Forward
+    target1 = 20;
+    target2 = 20;
+    fwd();
+    analogWrite(m1_pwm, 100);
+    analogWrite(m2_pwm, 100);
+  } else if (argument == '10') {  // Fast Backward
+    target1 = 20;
+    target2 = 20;
+    bkw();
+    analogWrite(m1_pwm, 100);
+    analogWrite(m2_pwm, 100);
+  } else if (argument == '11') {  // Fast Left
+    target1 = 20;
+    target2 = 20;
+    lt();
+    analogWrite(m1_pwm, 100);
+    analogWrite(m2_pwm, 100);
+  } else if (argument == '12') {  // Fast Right
+    target1 = 20;
+    target2 = 20;
+    rt();
+    analogWrite(m1_pwm, 100);
+    analogWrite(m2_pwm, 100);
+  } else if (argument == '13') {  // Slow Clock
+    target1 = 20;
+    target2 = 20;
+    cw();
+    analogWrite(m1_pwm, 20);
+    analogWrite(m2_pwm, 20);
+  } else if (argument == '14') {  // Slow Anti Clock
+    target1 = 20;
+    target2 = 20;
+    ccw();
+    analogWrite(m1_pwm, 20);
+    analogWrite(m2_pwm, 20);
+  } else if (argument == '15') {  // Clock
+    target1 = 20;
+    target2 = 20;
+    cw();
+    analogWrite(m1_pwm, 35);
+    analogWrite(m2_pwm, 35);
+  } else if (argument == '16') {  // Anti Clock
+    target1 = 20;
+    target2 = 20;
+    ccw();
+    analogWrite(m1_pwm, 35);
+    analogWrite(m2_pwm, 35);
+  }
+
+  else if (argument == '17') {  // Forward wheels
+    target1 = 20;
+    target2 = 20;
+    fwd();
+    analogWrite(m1_pwm, 0);
+    analogWrite(m2_pwm, 0);
+  } else if (argument == '18') {  // Backward wheels
+    target1 = 20;
+    target2 = 20;
+    fwd();
+    analogWrite(m1_pwm, 100);
+    analogWrite(m2_pwm, 100);
+  } else if (argument == '19') {  // Diagonal FL && RR
+    target1 = 20;
+    target2 = 20;
+    fwd();
+    analogWrite(m1_pwm, 0);
+    analogWrite(m2_pwm, 100);
+  }
+
+  else if (argument == '20') {  // Diagonal FR && RL
+    target1 = 20;
+    target2 = 20;
+    fwd();
+    analogWrite(m1_pwm, 100);
+    analogWrite(m2_pwm, 0);
+  }
+
+  else if (argument == '0') {  //  Stop
+    target1 = 0;
+    target2 = 0;
+    stp();
+  }
   }
 }
 

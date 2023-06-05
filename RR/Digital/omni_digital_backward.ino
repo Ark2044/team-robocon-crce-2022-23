@@ -1,20 +1,7 @@
-//Omni Canbus Slave1 reciever code
-//FR->m2 FL->m1
-#include <SPI.h>
-#include <mcp2515.h>
-
-// Define the CS pin for the CAN bus shield/module
-#define CS_PIN 10
-
-// Define the CAN message ID to read
-struct can_frame canMsg;
-
-// Create an MCP_CAN object for the CAN bus shield/module
-MCP2515 mcp2515(CS_PIN);
+//Omni Canbus Backward reciever code digital communication
+//RR->m2 RL->m1
 
 // Pin definition *********** /
-// List of the variables that will be recieved via I2C ****** / byte I2C_OnOff;  //defining the variable that will be sent
-char argument;
 int PIN_INPUT1 = 3;
 int PIN_INPUT2 = 2;
 
@@ -40,8 +27,17 @@ long prevT = 0;
 //motors
 int pwr1, pwr2;
 
+//communication pins
+int com_pin0 = A7;
+int com_pin1 = A6;
+int com_pin2 = A3;
+int com_pin3 = A2;
+int com_pin4 = A1;
+
+int com_var = 0;
+
 class SimplePID {
-private:
+private:  
   float kp, kd, ki, umax;  // Parameters
   float eprev, eintegral;  // Storage
   float e, u;
@@ -125,18 +121,19 @@ void setup() {
   pinMode(m2_dir, OUTPUT);
   pinMode(m2_pwm, OUTPUT);
 
-  //FR->m2  FL->m1
+  //Communication pins
+  pinMode(com_pin0, INPUT);
+  pinMode(com_pin1, INPUT);
+  pinMode(com_pin2, INPUT);
+  pinMode(com_pin3, INPUT);
+  pinMode(com_pin4, INPUT);
+
+  //RL->m1 RR->m2
 
   pid1.setParams(1.7, 0, 0.0000005, 255);  //Change kP,kD,kI,umax only here
   pid2.setParams(1.9, 0, 0.0000005, 255);  //Change kP,kD,kI,umax only here
   // pid1.evalu(s1, target1, deltaT, pwr1, m1_pwm);
   // pid2.evalu(s2, target2, deltaT, pwr2, m2_pwm);
-
-
-  // Initialize the CAN bus shield/module
-  mcp2515.reset();
-  mcp2515.setBitrate(CAN_125KBPS);
-  mcp2515.setNormalMode();
 }
 
 void loop() {
@@ -157,79 +154,158 @@ void loop() {
   // pid1.evalu(s1, target1, deltaT, pwr1, m1_pwm);
   // pid2.evalu(s2, target2, deltaT, pwr2, m2_pwm);
 
-  // Check for incoming messages
-  // Check if the message ID matches the ID we want to read
-  if (mcp2515.readMessage(&canMsg) == MCP2515::ERROR_OK) {
-    argument = canMsg.data[0];
-    Serial.print("Argument: ");
-    Serial.println(argument);
+  com_var = digitalRead(com_pin4) * pow(2, 4) + digitalRead(com_pin3) * pow(2, 3) + digitalRead(com_pin2) * pow(2, 2) + digitalRead(com_pin1) * pow(2, 1) + digitalRead(com_pin0) * pow(2, 0);
 
-    if (argument == 'f') {  // Forward
-      target1 = 20;
-      target2 = 20;
-      fwd();
-      analogWrite(m1_pwm, 75);
-      analogWrite(m2_pwm, 75);
-    } else if (argument == 'b') {  // Backward
-      target1 = 20;
-      target2 = 20;
-      bkw();
-      analogWrite(m1_pwm, 75);
-      analogWrite(m2_pwm, 75);
-    } else if (argument == 'l') {  // Left
-      target1 = 20;
-      target2 = 20;
-      lt();
-      analogWrite(m1_pwm, 75);
-      analogWrite(m2_pwm, 75);
-    } else if (argument == 'r') {  // Right
-      target1 = 20;
-      target2 = 20;
-      rt();
-      analogWrite(m1_pwm, 75);
-      analogWrite(m2_pwm, 75);
-    } else if (argument == 's') {  //  Stop
-      target1 = 0;
-      target2 = 0;
-      stp();
-    } else if (argument == 'c') {  //  Clock
-      target1 = 15;
-      target2 = 15;
-      cw();
-      analogWrite(m1_pwm, 40);
-      analogWrite(m2_pwm, 40);
-    } else if (argument == 'a') {  //  Anti-Clock
-      target1 = 15;
-      target2 = 15;
-      ccw();
-      analogWrite(m1_pwm, 40);
-      analogWrite(m2_pwm, 40);
-    } else if (argument == 'F') {  // Forward
-      target1 = 25;
-      target2 = 25;
-      fwd();
-      analogWrite(m1_pwm, 55);
-      analogWrite(m2_pwm, 55);
-    } else if (argument == 'B') {  // Backward
-      target1 = 25;
-      target2 = 25;
-      bkw();
-      analogWrite(m1_pwm, 55);
-      analogWrite(m2_pwm, 55);
-    } else if (argument == 'L') {  // Left
-      target1 = 25;
-      target2 = 25;
-      lt();
-      analogWrite(m1_pwm, 55);
-      analogWrite(m2_pwm, 55);
-    } else if (argument == 'R') {  // Right
-      target1 = 25;
-      target2 = 25;
-      rt();
-      analogWrite(m1_pwm, 55);
-      analogWrite(m2_pwm, 55);
-    }
+  Serial.print("Pin4: ");
+  Serial.print(digitalRead(com_pin4));
+
+  Serial.print("Pin3: ");
+  Serial.print(digitalRead(com_pin3));
+
+  Serial.print(" Pin2: ");
+  Serial.print(digitalRead(com_pin2));
+
+  Serial.print(" Pin1: ");
+  Serial.print(digitalRead(com_pin1));
+
+  Serial.print(" Pin0: ");
+  Serial.println(digitalRead(com_pin0));
+
+  Serial.print("Com Variable: ");
+  Serial.println(com_var);
+
+  if (com_var == 1) {  // Slow Forward
+    target1 = 20;
+    target2 = 20;
+    fwd();
+    analogWrite(m1_pwm, 45);
+    analogWrite(m2_pwm, 45);
+  } else if (com_var == 2) {  // Slow Backward
+    target1 = 20;
+    target2 = 20;
+    bkw();
+    analogWrite(m1_pwm, 45);
+    analogWrite(m2_pwm, 45);
+  } else if (com_var == 3) {  // Slow Left
+    target1 = 20;
+    target2 = 20;
+    lt();
+    analogWrite(m1_pwm, 45);
+    analogWrite(m2_pwm, 45);
+  } else if (com_var == 4) {  // Slow Right
+    target1 = 20;
+    target2 = 20;
+    rt();
+    analogWrite(m1_pwm, 45);
+    analogWrite(m2_pwm, 45);
+  } else if (com_var == 5) {  // Forward
+    target1 = 20;
+    target2 = 20;
+    fwd();
+    analogWrite(m1_pwm, 85);
+    analogWrite(m2_pwm, 85);
+  } else if (com_var == 6) {  // Backward
+    target1 = 20;
+    target2 = 20;
+    bkw();
+    analogWrite(m1_pwm, 85);
+    analogWrite(m2_pwm, 85);
+  } else if (com_var == 7) {  // Left
+    target1 = 20;
+    target2 = 20;
+    lt();
+    analogWrite(m1_pwm, 85);
+    analogWrite(m2_pwm, 85);
+  } else if (com_var == 8) {  // Right
+    target1 = 20;
+    target2 = 20;
+    rt();
+    analogWrite(m1_pwm, 85);
+    analogWrite(m2_pwm, 85);
+  } else if (com_var == 9) {  // Fast Forward
+    target1 = 20;
+    target2 = 20;
+    fwd();
+    analogWrite(m1_pwm, 100);
+    analogWrite(m2_pwm, 100);
+  } else if (com_var == 10) {  // Fast Backward
+    target1 = 20;
+    target2 = 20;
+    bkw();
+    analogWrite(m1_pwm, 100);
+    analogWrite(m2_pwm, 100);
+  } else if (com_var == 11) {  // Fast Left
+    target1 = 20;
+    target2 = 20;
+    lt();
+    analogWrite(m1_pwm, 100);
+    analogWrite(m2_pwm, 100);
+  } else if (com_var == 12) {  // Fast Right
+    target1 = 20;
+    target2 = 20;
+    rt();
+    analogWrite(m1_pwm, 100);
+    analogWrite(m2_pwm, 100);
+  } else if (com_var == 13) {  // Slow Clock
+    target1 = 20;
+    target2 = 20;
+    cw();
+    analogWrite(m1_pwm, 20);
+    analogWrite(m2_pwm, 20);
+  } else if (com_var == 14) {  // Slow Anti Clock
+    target1 = 20;
+    target2 = 20;
+    ccw();
+    analogWrite(m1_pwm, 20);
+    analogWrite(m2_pwm, 20);
+  } else if (com_var == 15) {  // Clock
+    target1 = 20;
+    target2 = 20;
+    cw();
+    analogWrite(m1_pwm, 35);
+    analogWrite(m2_pwm, 35);
+  } else if (com_var == 16) {  // Anti Clock
+    target1 = 20;
+    target2 = 20;
+    ccw();
+    analogWrite(m1_pwm, 35);
+    analogWrite(m2_pwm, 35);
   }
+
+  else if (com_var == 17) {  // Forward wheels
+    target1 = 20;
+    target2 = 20;
+    fwd();
+    analogWrite(m1_pwm, 0);
+    analogWrite(m2_pwm, 0);
+  } else if (com_var == 18) {  // Backward wheels
+    target1 = 20;
+    target2 = 20;
+    fwd();
+    analogWrite(m1_pwm, 100);
+    analogWrite(m2_pwm, 100);
+  } else if (com_var == 19) {  // Diagonal FL && RR
+    target1 = 20;
+    target2 = 20;
+    fwd();
+    analogWrite(m1_pwm, 0);
+    analogWrite(m2_pwm, 100);
+  }
+
+  else if (com_var == 20) {  // Diagonal FR && RL
+    target1 = 20;
+    target2 = 20;
+    fwd();
+    analogWrite(m1_pwm, 100);
+    analogWrite(m2_pwm, 0);
+  }
+
+  else if (com_var == 0) {  //  Stop
+    target1 = 0;
+    target2 = 0;
+    stp();
+  }
+  
 }
 
 void interrupt_routine1() {
@@ -242,7 +318,7 @@ void interrupt_routine2() {
 
 void readspeed() {
   s1 = newcount1;
-  Serial.print("FL = ");
+  Serial.print("RL = ");
   Serial.print(s1);
   // Serial.print(",");
   Serial.print(" PWM1 = ");
@@ -251,7 +327,7 @@ void readspeed() {
   Serial.println(target1);
 
   s2 = newcount2;
-  Serial.print("FR = ");
+  Serial.print("RR = ");
   Serial.print(s2);
   Serial.print(" PWM2 = ");
   Serial.print(pwr2);
@@ -260,26 +336,26 @@ void readspeed() {
 }
 
 //HIGH LEVEL MOTOR FUNCTIONS (fwd, bkw, rt, lt, cw, ccw)
-//FR->m2  FL->m1
+//RR->m2 RL->m1
 void fwd() {
   Serial.println("Bot moving forward");
-  m1_ccwMotor();
-  m2_ccwMotor();
+  m1_cwMotor();
+  m2_cwMotor();
 }
 void bkw() {
   Serial.println("Bot moving backwards");
-  m1_cwMotor();
-  m2_cwMotor();
+  m1_ccwMotor();
+  m2_ccwMotor();
 }
 void rt() {
   Serial.println("Bot moving right");
-  m1_cwMotor();
-  m2_ccwMotor();
+  m1_ccwMotor();
+  m2_cwMotor();
 }
 void lt() {
   Serial.println("Bot moving left");
-  m1_ccwMotor();
-  m2_cwMotor();
+  m1_cwMotor();
+  m2_ccwMotor();
 }
 void ccw() {
   Serial.println("Bot moving clockwise");
