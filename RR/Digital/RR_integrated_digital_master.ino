@@ -22,8 +22,6 @@ const int m1_pwm = 4;
 const int m2_dir = 27;  //right motor with behind the shooter - pov
 const int m2_pwm = 3;
 
-long long currT = 0;
-
 //shooter - motor's pwm
 int pwm_shooter = 85;  //near type 2 pole
 
@@ -59,9 +57,12 @@ const int enbf = 8;
 
 bool init_flip = 1;
 
+//Timer
+long int currT = 0;
+long int prevT = 0;
+
 // limit switch for flipping
 const int limit_switch_up = 30;
-// const int limit_switch_down = 1000;
 
 // relay claw
 const int relay_claw = 10;
@@ -86,6 +87,8 @@ const int com_pin0 = 35;
 // const int com_pin1=39;
 // const int com_pin0=37;
 
+int pin=53;
+
 /** PS4 USB **/
 //Use this for PS4 USB and comment PS4 BT
 //USB Usb;
@@ -106,6 +109,8 @@ uint8_t oldL2Value, oldR2Value;
 void flip_up() {
   if (digitalRead(limit_switch_up) == 1 && init_flip == 1)  // run the following when claw completes 180 degrees
   {
+    // Serial.print("Limit Switch: ");
+    // Serial.println(digitalRead(limit_switch_up));
     Serial.println("stopping process");
     analogWrite(enaf, 0);
     analogWrite(enbf, 0);
@@ -127,6 +132,8 @@ void flip_up() {
   }
 
   else if (digitalRead(limit_switch_up) == 0 && init_flip == 0) {
+    // Serial.print("Limit Switch: ");
+    // Serial.println(digitalRead(limit_switch_up));
     Serial.println("limit switch up low");
     init_flip = 1;
   }
@@ -162,8 +169,8 @@ void flip_down() {
   digitalWrite(inf1, LOW);
   digitalWrite(inf2, HIGH);
   analogWrite(enbf, 115);
-  digitalWrite(inf3, HIGH);
-  digitalWrite(inf4, LOW);
+  digitalWrite(inf3, LOW);
+  digitalWrite(inf4, HIGH);
   //  }
 }
 /** claw ***/
@@ -171,8 +178,6 @@ void flip_down() {
 void setup() {
   servo_right.attach(s1);
   servo_left.attach(s2);
-  // servo_left.write(servo_left_var);
-  // servo_right.write(servo_right_var);
   servo_left.write(hold_servo_left);
   servo_right.write(hold_servo_right);
 
@@ -214,6 +219,7 @@ void setup() {
 
   // limit switches for flipping
   pinMode(limit_switch_up, INPUT);
+  digitalWrite(limit_switch_up, LOW);
   // pinMode(limit_switch_down, INPUT);
 
   //relay for claw
@@ -255,12 +261,13 @@ void loop() {
   Usb.Task();
 
   if (PS4.connected()) {
-    Serial.print("Limit Switch: ");
+    Serial.print("Limit Switch Up: ");
     Serial.println(digitalRead(limit_switch_up));
+
     int right_x = map(PS4.getAnalogHat(RightHatX), 0, 255, -255, 255);
     int right_y = map(PS4.getAnalogHat(RightHatY), 0, 255, 255, -255);
 
-    /** flywheel ***/
+    /** claw ***/
     if (PS4.getButtonPress(SHARE) && PS4.getButtonPress(L3) && !(servo_left_var > 179) && !(servo_left_var < 0)) {
       servo_left_var += 0.1;
       if (servo_left_var >= 180) {
@@ -280,6 +287,9 @@ void loop() {
       Serial.println(servo_left_var);
       servo_left.write(servo_left_var);
     }
+    /** claw ***/
+
+    /** flywheel ***/
 
     if (PS4.getButtonPress(L3) && PS4.getButtonClick(R2)) {
       if (pwm_shooter >= 255) {
@@ -313,7 +323,8 @@ void loop() {
     }
 
     else if (PS4.getButtonPress(L3) && PS4.getButtonClick(SQUARE)) {
-      pwm_shooter = 85;  // Near type 2 pole
+      // pwm_shooter = 85;  // Near type 2 pole
+      pwm_shooter = 115;  // Near type 2 pole
       // Serial.print("Shooter PWM");
       // Serial.println(pwm_shooter);
       analogWrite(m1_pwm, pwm_shooter);
@@ -321,7 +332,8 @@ void loop() {
     }
 
     else if (PS4.getButtonPress(L3) && PS4.getButtonClick(CIRCLE)) {
-      pwm_shooter = 141;  // Far type 2 pole
+      // pwm_shooter = 141;  // Opp type 2 pole
+      pwm_shooter = 141;  // Opp type 2 pole
       // Serial.print("Shooter PWM");
       // Serial.println(pwm_shooter);
       analogWrite(m1_pwm, pwm_shooter);
@@ -329,12 +341,17 @@ void loop() {
     }
 
     else if (PS4.getButtonPress(L3) && PS4.getButtonClick(TRIANGLE)) {
-      pwm_shooter = 225;  // Center pole
+      // pwm_shooter = 225;  // Center pole
+      pwm_shooter = 135;  // Center pole
       // Serial.print("Shooter PWM");
       // Serial.println(pwm_shooter);
       analogWrite(m1_pwm, pwm_shooter);
       analogWrite(m2_pwm, pwm_shooter);
     }
+
+    /** flywheel ***/
+
+    /** claw ***/
 
     // //flip the claw
     if (PS4.getButtonPress(L2) && PS4.getButtonPress(SQUARE) && !(PS4.getButtonPress(L3))) {
@@ -349,12 +366,13 @@ void loop() {
 
     else {
       // Serial.println("Stop Claw");
-      analogWrite(enbf, 0);
+      analogWrite(enaf, 0);
       digitalWrite(inf1, LOW);
       digitalWrite(inf2, LOW);
+      digitalWrite(inf3, LOW);
+      digitalWrite(inf4, LOW);
+      analogWrite(enbf, 0);
     }
-    /** claw ***/
-
 
     if (PS4.getButtonPress(SHARE) && PS4.getButtonPress(R3) && !(servo_right_var > 179) && !(servo_right_var < 0)) {
       servo_right_var += 0.1;
@@ -377,6 +395,10 @@ void loop() {
       servo_right.write(servo_right_var);
     }
 
+    /** claw ***/
+
+    /** Shoot ***/
+
     else if (PS4.getButtonClick(R3))  //shoot the ring using piston
     {
       // Serial.print("Shoot Ring");
@@ -385,46 +407,59 @@ void loop() {
       // Serial.println("SHOT!!");
       digitalWrite(relay_shooter, LOW);
 
-      // digitalWrite(relay_claw, HIGH);
       digitalWrite(relay_claw, LOW);
-
-      delay(200);
-      // final_right_servo = servo_right_var - 90;
-      // final_left_servo = servo_left_var + 90;
-      // servo_right.write(final_right_servo);
-      // servo_left.write(final_left_servo);
+      delay(500);
+      /** One time open close ***/
       servo_right.write(release_servo_right);
       servo_left.write(release_servo_left);
+
       delay(1000);
 
-      // final_right_servo = servo_right_var;
-      // final_left_servo = servo_left_var;
-      // servo_right.write(final_right_servo);
-      // servo_left.write(final_left_servo);
       servo_right.write(hold_servo_right);
       servo_left.write(hold_servo_left);
       delay(500);
+      /** One time open close no delay ***/
+
+
+      /** Two times open close with delay***/
+
+      // servo_right.write(release_servo_right);
+      // delay(900);  //added delay
+      // servo_left.write(release_servo_left);
+
+      // delay(1000);
+
+      // servo_right.write(hold_servo_right);
+      // servo_left.write(hold_servo_left);
+      // delay(500);
+
+      // servo_right.write(release_servo_right);
+      // delay(900);  //added delay
+      // servo_left.write(release_servo_left);
+
+      // delay(1000);
+
+      // servo_right.write(hold_servo_right);
+      // servo_left.write(hold_servo_left);
+      // delay(500);
+      /** Two times open close with delay***/
 
       digitalWrite(relay_claw, HIGH);
       // digitalWrite(relay_claw, LOW);
-
-      //servoright.write(0);
-      //servoleft.write(100);
     }
 
     else  //retract piston
     {
       // Serial.println("Retract Shooter Piston");
-      // digitalWrite(relay_claw, LOW);
       digitalWrite(relay_claw, HIGH);
 
-      servo_left.write(servo_left_var);
-      servo_right.write(servo_right_var);
+      servo_left.write(hold_servo_left);
+      servo_right.write(hold_servo_right);
     }
+    /** Shoot ***/
 
 
-    /** flywheel ***/
-
+    /** claw ***/
     if (PS4.getButtonPress(TOUCHPAD) && PS4.getButtonPress(SHARE)) {
       digitalWrite(relay_claw, HIGH);
       // delay(100);
@@ -432,6 +467,7 @@ void loop() {
 
     if (PS4.getButtonPress(TOUCHPAD) && PS4.getButtonPress(OPTIONS)) {
       digitalWrite(relay_claw, LOW);
+
       // delay(100);
     }
     /** claw ***/
